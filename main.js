@@ -105,7 +105,7 @@
     offCtx.clearRect(0, 0, off.width, off.height);
     offCtx.drawImage(glassesSrc, 0, 0, off.width, off.height);
 
-    // Adjust transparency: reduce opacity in strong red or blue regions (simule verres semi-transparents)
+    // Adjust transparency: reduce opacity in strong red or blue/cyan regions (simule verres semi-transparents)
     try {
       const imgData = offCtx.getImageData(0, 0, off.width, off.height);
       const data = imgData.data;
@@ -116,12 +116,17 @@
         const a = data[i+3];
 
         // Heuristics for colored lenses (tweak thresholds as needed)
-        const isRedish = r > 140 && g < 120 && b < 120 && r - Math.max(g, b) > 30;
-        const isBluish = b > 140 && r < 120 && g < 120 && b - Math.max(r, g) > 30;
+        // Red/magenta dominant
+        const isRedish = (r > 135 && r - g > 25 && r - b > 25) || (r > 150 && b > 120 && r - g > 30);
+        // Blue or cyan dominant (allow high green for cyan)
+        const isBlueCyan = (b > 135 && b - r > 20 && b >= g - 10) || (b > 125 && g > 125 && r < 160 && ((b + g) / 2 - r) > 25);
 
-        if ((isRedish || isBluish) && a > 0) {
-          // Make these pixels semi-transparent but not invisible
-          data[i+3] = Math.min(200, Math.max(90, Math.floor(a * 0.55))); // alpha 90..200
+        if (a > 0 && (isRedish || isBlueCyan)) {
+          // Stronger transparency for blue/cyan to ensure it's clearly see-through
+          const factor = isBlueCyan ? 0.35 : 0.5; // blue/cyan more transparent than red
+          const minA = isBlueCyan ? 40 : 70;
+          const maxA = isBlueCyan ? 160 : 190;
+          data[i+3] = Math.min(maxA, Math.max(minA, Math.floor(a * factor)));
         }
       }
       offCtx.putImageData(imgData, 0, 0);
