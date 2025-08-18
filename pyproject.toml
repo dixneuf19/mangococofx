@@ -1,14 +1,10 @@
 [project]
 name = "mangococofx"
 version = "0.1.0"
-description = "Mango Coco Production backend"
+description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-  "fastapi>=0.115.0,<1",
-  "uvicorn[standard]>=0.30.0,<1",
+    "fastapi>=0.116.1",
+    "uvicorn[standard]>=0.35.0",
 ]
-
-[build-system]
-requires = ["hatchling>=1.25.0"]
-build-backend = "hatchling.build"

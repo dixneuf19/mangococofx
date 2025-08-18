@@ -52,12 +52,12 @@ async def poll(since: int = -1, timeout_ms: int = 25000):
     return JSONResponse({"version": hub.version, "state": hub.state})
 
 # Serve static files (frontend) from repo root
-app.mount("/static", StaticFiles(directory=".", html=False), name="static")
+app.mount("/static", StaticFiles(directory="static", html=False), name="static")
 
 @app.get("/")
 async def index():
-    return FileResponse("index.html")
+    return FileResponse("static/index.html")
 
 @app.get("/admin")
 async def admin():
-    return FileResponse("admin.html")
+    return FileResponse("static/admin.html")
