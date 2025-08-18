@@ -160,42 +160,34 @@
     processedW = off.width;
     processedH = off.height;
 
-    // Effacer la frame courante pour éviter un flash
+    // Dessiner immédiatement les lunettes fixes sur le canvas overlay
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const containerW = canvas.width;
+    const containerH = canvas.height;
+    isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+    ctx.save();
+    ctx.translate(containerW / 2, containerH / 2);
+    if (isPortrait) ctx.rotate(Math.PI / 2);
+    ctx.drawImage(processedCanvas, -processedW / 2, -processedH / 2);
+    ctx.restore();
   }
 
   function applyOverlayRotation() { /* supprimé */ }
 
   function drawFrame(ts) {
     if (!processedCanvas) return;
-    const overlay = glassesCanvas;
-    const ctxOverlay = overlay.getContext('2d');
-    const containerW = overlay.width;
-    const containerH = overlay.height;
+    const containerW = spritesCanvas.width;
+    const containerH = spritesCanvas.height;
     const spritesCtx = spritesCanvas.getContext('2d');
 
-    // Nettoyage
-    ctxOverlay.clearRect(0, 0, containerW, containerH);
+    // Nettoyage uniquement des sprites
     spritesCtx.clearRect(0, 0, containerW, containerH);
 
-    // Animation légère: rebond vertical + micro respiration
+    // Timing
     const now = ts || performance.now();
-    const dtMs = lastTickMs ? Math.min(50, now - lastTickMs) : 16; // clamp pour éviter les sauts
+    const dtMs = lastTickMs ? Math.min(50, now - lastTickMs) : 16;
     lastTickMs = now;
-    const t = now / 1000;
-    const freqHz = 0.7; // vitesse
-    const phase = t * Math.PI * 2 * freqHz;
-    const amp = Math.round(Math.min(containerW, containerH) * 0.01); // 1% d'amplitude
-    const bob = 0; // plus de rebond
-    const scale = 1; // pas de respiration
-
-    isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    ctxOverlay.save();
-    ctxOverlay.translate(containerW / 2, containerH / 2);
-    if (isPortrait) ctxOverlay.rotate(Math.PI / 2);
-    ctxOverlay.drawImage(processedCanvas, -processedW / 2, -processedH / 2);
-    ctxOverlay.restore();
 
     // ---- FX: Sprites entre caméra et lunettes ----
     animateSprites(now, dtMs, containerW, containerH, spritesCtx);
