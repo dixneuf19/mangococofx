@@ -3,12 +3,11 @@
   const intro = document.getElementById('intro');
   const viewer = document.getElementById('viewer');
   const startButton = document.getElementById('startButton');
-  const backButton = document.getElementById('backButton');
   const video = document.getElementById('camera');
   const errorEl = document.getElementById('error');
   const glassesCanvas = document.getElementById('glassesCanvas');
   const glassesSrc = document.getElementById('glassesSrc');
-  const orientationHint = document.getElementById('orientationHint');
+  // Pas d'UI overlay
 
   let mediaStream = null;
   let isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
@@ -149,14 +148,10 @@
       ctx.drawImage(off, dx, dy);
     }
 
-    // Update UI hint state
-    applyOverlayRotation();
+    // Aucun hint, rien à faire
   }
 
-  function applyOverlayRotation() {
-    isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    orientationHint.style.display = isPortrait ? 'inline-flex' : 'none';
-  }
+  function applyOverlayRotation() { /* supprimé */ }
 
   function onResize() {
     processGlassesAndRender();
@@ -169,9 +164,7 @@
     processGlassesAndRender();
   });
 
-  backButton.addEventListener('click', () => {
-    showIntro();
-  });
+  // Aucun bouton retour
 
   glassesSrc.addEventListener('load', () => {
     processGlassesAndRender();
@@ -181,7 +174,6 @@
   if (window.matchMedia) {
     try {
       window.matchMedia('(orientation: portrait)').addEventListener('change', () => {
-        applyOverlayRotation();
         processGlassesAndRender();
       });
     } catch (_) {
