@@ -27,15 +27,27 @@
   async function startCamera() {
     errorEl.hidden = true;
     try {
-      const constraints = {
-        audio: false,
-        video: {
-          facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+      // Préfère la caméra arrière; essaie plusieurs variantes.
+      const attempts = [
+        { audio: false, video: { facingMode: { exact: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } },
+        { audio: false, video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } },
+        { audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        { audio: false, video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } }
+      ];
+
+      stopCamera();
+
+      let lastErr = null;
+      for (const c of attempts) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia(c);
+          break;
+        } catch (e) {
+          lastErr = e;
         }
-      };
-      mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      }
+      if (!mediaStream) throw lastErr || new Error('Impossible d\'accéder à la caméra');
+
       video.srcObject = mediaStream;
       await video.play().catch(() => {});
     } catch (err) {
@@ -69,9 +81,7 @@
     const off = document.createElement('canvas');
     const offCtx = off.getContext('2d');
 
-    // We will fit the glasses in the middle ~70% of the shorter side
-    const targetShortSideRatio = 0.7;
-
+    // Couvrir tout l'écran avec l'image des lunettes (comme object-fit: cover)
     let imgW = glassesSrc.naturalWidth;
     let imgH = glassesSrc.naturalHeight;
 
@@ -81,19 +91,13 @@
     const containerW = canvas.width;
     const containerH = canvas.height;
 
-    // If portrait, rotate the final canvas via CSS; we still draw un-rotated here then CSS rotates
-    // Compute draw size to fit best within container short side
-    const shortSide = Math.min(containerW, containerH);
-    const targetSize = shortSide * targetShortSideRatio;
-    const imgAspect = imgW / imgH;
-
-    if (imgAspect >= 1) {
-      drawW = targetSize;
-      drawH = targetSize / imgAspect;
-    } else {
-      drawH = targetSize;
-      drawW = targetSize * imgAspect;
-    }
+    // Calcul de l'échelle pour couvrir, en tenant compte de la rotation en portrait
+    isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+    const scale = isPortrait
+      ? Math.max(containerW / imgH, containerH / imgW) // l'image sera tournée de 90°
+      : Math.max(containerW / imgW, containerH / imgH);
+    drawW = Math.ceil(imgW * scale);
+    drawH = Math.ceil(imgH * scale);
 
     off.width = Math.ceil(drawW);
     off.height = Math.ceil(drawH);
