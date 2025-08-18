@@ -17,6 +17,18 @@
   let processedH = 0;
   let rafId = null;
   let lastTickMs = 0;
+  // Ajustement de remplissage (1.0 = 100% de l'écran). Plus grand peut rogner.
+  let GLASSES_FILL = 1.05; // par défaut: un peu plus grand que l'écran
+  function setGlassesFill(next) {
+    const v = Number(next);
+    if (!Number.isFinite(v)) return;
+    GLASSES_FILL = Math.max(0.6, Math.min(1.5, v));
+    processGlassesAndRender();
+  }
+  function getGlassesFill() { return GLASSES_FILL; }
+  // Expose pour réglage rapide via la console
+  window.setGlassesFill = setGlassesFill;
+  window.getGlassesFill = getGlassesFill;
 
   // Sprites (emojis) qui traversent l'écran
   const SPRITE_EMOJIS = ['🥭', '🥥', '🎺', '🥁'];
@@ -107,8 +119,8 @@
     // Dimension cible: occuper jusqu'à 90% du viewport dans les deux dimensions
     // (en portrait, l'image est tournée, donc on inverse les contraintes)
     isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    const limitW = containerW * 0.99;
-    const limitH = containerH * 0.99;
+    const limitW = containerW * GLASSES_FILL;
+    const limitH = containerH * GLASSES_FILL;
     let k;
     if (isPortrait) {
       // Après rotation: width_perçue = drawH, height_perçue = drawW
