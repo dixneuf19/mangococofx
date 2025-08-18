@@ -1,59 +1,65 @@
 <!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Mango Coco Production — Effets spéciaux très sérieux*</title>
-    <meta name="description" content="Mango Coco Production — Société de prod spécialisée en effets spéciaux (et fanfare)." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div id="app">
-      <!-- Écran d'accueil -->
-      <section id="intro" class="screen active">
-        <div class="noise"></div>
-        <div class="intro-content">
-          <h1 class="logo">Mango Coco <span>Production</span></h1>
-          <p class="tagline">Société de prod spécialisée en effets spéciaux<br/>et fière fanfare de quartier 🎺🥭🥥</p>
 
-          <div class="fx-badges">
-            <span class="badge">FX 3000</span>
-            <span class="badge">Super 3D</span>
-            <span class="badge">Dolby Brass</span>
-          </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mango Coco Production — Effets spéciaux très sérieux*</title>
+  <meta name="description"
+    content="Mango Coco Production — Société de prod spécialisée en effets spéciaux (et fanfare)." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
 
-          <button id="startButton" class="cta">Lancer le mode 3D</button>
+<body>
+  <div id="app">
+    <!-- Écran d'accueil -->
+    <section id="intro" class="screen active">
+      <div class="noise"></div>
+      <div class="intro-content">
+        <h1 class="logo">Mango Coco <span>Production</span></h1>
+        <p class="tagline">Société de prod spécialisée en effets spéciaux<br />et fière fanfare de quartier 🎺🥭🥥</p>
 
-          <p class="disclaimer">*Sérieux approximatif garanti</p>
+        <div class="fx-badges">
+          <span class="badge">FX 3000</span>
+          <span class="badge">Super 3D</span>
+          <span class="badge">Dolby Brass</span>
         </div>
 
-        <div class="placeholders">
-          <div class="ph">Espace pour vos photos de la fanfare</div>
-          <div class="ph small">Affiche du spectacle à venir</div>
-        </div>
-      </section>
+        <button id="startButton" class="cta">Lancer le mode 3D</button>
 
-      <!-- Écran caméra 3D -->
-      <section id="viewer" class="screen">
-        <div id="cameraContainer">
-          <video id="camera" playsinline autoplay muted></video>
-          <!-- Calque lunettes: rendu sur canvas pour pouvoir ajuster la transparence localement -->
-          <canvas id="glassesCanvas" aria-hidden="true"></canvas>
-          <!-- Image source (cachée) -->
-          <img id="glassesSrc" src="pngkey.com-sunglasses-png-14131.png" alt="Lunettes 3D" style="display:none" />
+        <p class="disclaimer">*Sérieux approximatif garanti</p>
+      </div>
 
-          <!-- Interface supprimée pour une immersion totale -->
-        </div>
+      <div class="placeholders">
+        <div class="ph">Espace pour vos photos de la fanfare</div>
+        <div class="ph small">Affiche du spectacle à venir</div>
+      </div>
+    </section>
 
-        <div id="error" class="error" role="alert" hidden>
-          Oups, impossible d'utiliser la caméra. Vérifiez les autorisations et réessayez.
-        </div>
-      </section>
-    </div>
+    <!-- Écran caméra 3D -->
+    <section id="viewer" class="screen">
+      <div id="cameraContainer">
+        <video id="camera" playsinline autoplay muted></video>
+        <!-- Canvas sprites (emojis) entre la caméra et les lunettes -->
+        <canvas id="spritesCanvas" aria-hidden="true"></canvas>
+        <!-- Calque lunettes: rendu sur canvas pour pouvoir ajuster la transparence localement -->
+        <canvas id="glassesCanvas" aria-hidden="true"></canvas>
+        <!-- Image source (cachée) -->
+        <img id="glassesSrc" src="pngkey.com-sunglasses-png-14131.png" alt="Lunettes 3D" style="display:none" />
 
-    <script src="main.js" defer></script>
-  </body>
+        <!-- Interface supprimée pour une immersion totale -->
+      </div>
+
+      <div id="error" class="error" role="alert" hidden>
+        Oups, impossible d'utiliser la caméra. Utilisez vos propres yeux et votre imagination.
+      </div>
+    </section>
+  </div>
+
+  <script src="main.js" defer></script>
+</body>
+
 </html>

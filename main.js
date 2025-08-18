@@ -6,6 +6,7 @@
   const video = document.getElementById('camera');
   const errorEl = document.getElementById('error');
   const glassesCanvas = document.getElementById('glassesCanvas');
+  const spritesCanvas = document.getElementById('spritesCanvas');
   const glassesSrc = document.getElementById('glassesSrc');
   // Pas d'UI overlay
 
@@ -168,13 +169,15 @@
 
   function drawFrame(ts) {
     if (!processedCanvas) return;
-    const canvas = glassesCanvas;
-    const ctx = canvas.getContext('2d');
-    const containerW = canvas.width;
-    const containerH = canvas.height;
+    const overlay = glassesCanvas;
+    const ctxOverlay = overlay.getContext('2d');
+    const containerW = overlay.width;
+    const containerH = overlay.height;
+    const spritesCtx = spritesCanvas.getContext('2d');
 
     // Nettoyage
-    ctx.clearRect(0, 0, containerW, containerH);
+    ctxOverlay.clearRect(0, 0, containerW, containerH);
+    spritesCtx.clearRect(0, 0, containerW, containerH);
 
     // Animation légère: rebond vertical + micro respiration
     const now = ts || performance.now();
@@ -184,19 +187,18 @@
     const freqHz = 0.7; // vitesse
     const phase = t * Math.PI * 2 * freqHz;
     const amp = Math.round(Math.min(containerW, containerH) * 0.01); // 1% d'amplitude
-    const bob = Math.sin(phase) * amp;
-    const scale = 1 + 0.03 * Math.sin(phase * 0.5); // 3% de pulsation (breathing accentué)
+    const bob = 0; // plus de rebond
+    const scale = 1; // pas de respiration
 
     isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    ctx.save();
-    ctx.translate(containerW / 2, containerH / 2 + bob);
-    if (isPortrait) ctx.rotate(Math.PI / 2);
-    ctx.scale(scale, scale);
-    ctx.drawImage(processedCanvas, -processedW / 2, -processedH / 2);
-    ctx.restore();
+    ctxOverlay.save();
+    ctxOverlay.translate(containerW / 2, containerH / 2);
+    if (isPortrait) ctxOverlay.rotate(Math.PI / 2);
+    ctxOverlay.drawImage(processedCanvas, -processedW / 2, -processedH / 2);
+    ctxOverlay.restore();
 
-    // ---- FX: Sprites qui traversent l'écran ----
-    animateSprites(now, dtMs, containerW, containerH, ctx);
+    // ---- FX: Sprites entre caméra et lunettes ----
+    animateSprites(now, dtMs, containerW, containerH, spritesCtx);
   }
 
   function startAnimation() {
@@ -210,6 +212,13 @@
 
   function onResize() {
     processGlassesAndRender();
+    // adapter la taille du canvas sprites
+    const rect = document.getElementById('cameraContainer').getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    spritesCanvas.width = Math.floor(rect.width * dpr);
+    spritesCanvas.height = Math.floor(rect.height * dpr);
+    spritesCanvas.style.width = rect.width + 'px';
+    spritesCanvas.style.height = rect.height + 'px';
   }
 
   function ensureSpritesLoaded() {
@@ -287,6 +296,7 @@
     processGlassesAndRender();
     startAnimation();
     ensureSpritesLoaded();
+    onResize();
   });
 
   // Aucun bouton retour
@@ -304,6 +314,7 @@
         processGlassesAndRender();
         // Redémarrer l'animation pour recalculer le centre
         startAnimation();
+        onResize();
       });
     } catch (_) {
       // Safari iOS older versions do not support addEventListener on MediaQueryList
