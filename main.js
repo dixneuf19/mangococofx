@@ -163,8 +163,6 @@
     // Dessiner immédiatement les lunettes fixes sur le canvas overlay
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const containerW = canvas.width;
-    const containerH = canvas.height;
     isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
     ctx.save();
     ctx.translate(containerW / 2, containerH / 2);
