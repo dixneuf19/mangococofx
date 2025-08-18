@@ -22,6 +22,7 @@
       img.style.maxWidth = '100%';
       img.style.maxHeight = '100%';
       img.style.objectFit = 'contain';
+      img.style.transformOrigin = '50% 50%';
       img.src = '/static/chicken-run-movie-dancing.gif';
 
       el.appendChild(img);
@@ -30,11 +31,32 @@
     return el;
   }
 
+  function updateGifLayout() {
+    const img = document.getElementById('gif-overlay-img');
+    const el = document.getElementById('gif-overlay');
+    if (!img || !el || el.style.display === 'none') return;
+    const isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+    if (isPortrait) {
+      img.style.transform = 'rotate(90deg)';
+      img.style.width = window.innerHeight + 'px';
+      img.style.height = window.innerWidth + 'px';
+      img.style.maxWidth = '';
+      img.style.maxHeight = '';
+    } else {
+      img.style.transform = 'none';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
+    }
+  }
+
   function applyState(state) {
     const overlays = (state && state.overlays) || {};
     const chicken = !!overlays['chicken'];
     const el = ensureGifOverlay();
     el.style.display = chicken ? 'flex' : 'none';
+    if (chicken) updateGifLayout();
   }
 
   async function pollLoop() {
@@ -53,4 +75,8 @@
   }
 
   pollLoop();
+  window.addEventListener('resize', updateGifLayout);
+  if (window.matchMedia) {
+    try { window.matchMedia('(orientation: portrait)').addEventListener('change', updateGifLayout); } catch {}
+  }
 })();
