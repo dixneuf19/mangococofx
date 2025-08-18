@@ -43,7 +43,7 @@
     </main>
     <script>
       const buttons = Array.from(document.querySelectorAll('[data-overlay]'));
-      const state = new Map();
+      let active = null;
       async function setOverlay(name, enabled) {
         const res = await fetch(`/api/overlay/${encodeURIComponent(name)}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -54,9 +54,11 @@
       buttons.forEach(btn => {
         btn.addEventListener('click', async () => {
           const key = btn.dataset.overlay;
-          const next = !(state.get(key) === true);
-          state.set(key, next);
-          btn.classList.toggle('on', next);
+          const isSame = active === key;
+          const next = isSame ? false : true; // toggle off if same, else activate exclusively
+          // UI exclusif
+          buttons.forEach(b => b.classList.toggle('on', b === btn && next));
+          active = next ? key : null;
           try { await setOverlay(key, next); } catch(e) { alert('Erreur API'); }
         });
       });

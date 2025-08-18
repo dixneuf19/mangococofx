@@ -1,4 +1,4 @@
-(function(){
+(function () {
   let version = -1;
   let aborted = false;
   let gifMapCache = null;
@@ -24,14 +24,14 @@
       img.style.maxHeight = '100%';
       img.style.objectFit = 'contain';
       img.style.transformOrigin = '50% 50%';
-      img.src = '/static/chicken-run-movie-dancing.gif';
+      img.src = '';
 
       // mapping overlay -> gif path
       const map = document.createElement('script');
       map.type = 'application/json';
       map.id = 'gif-map';
       map.textContent = JSON.stringify({
-        chicken: '/static/gif/chicken-run-movie-dancing.gif',
+        chicken: '/static/gif/chicken-run.gif',
         matrix: '/static/gif/matrix-bullet-dodge.gif',
         superman: '/static/gif/superman-flying.gif',
         mangococo: '/static/gif/mgcc.gif'
@@ -44,7 +44,7 @@
     return el;
   }
 
-  function getGifMap(){
+  function getGifMap() {
     if (gifMapCache) return gifMapCache;
     const mapEl = document.getElementById('gif-map');
     try { gifMapCache = JSON.parse(mapEl?.textContent || '{}'); }
@@ -52,7 +52,7 @@
     return gifMapCache;
   }
 
-  function preloadGifs(){
+  function preloadGifs() {
     const gifs = getGifMap();
     let holder = document.getElementById('gif-preloads');
     if (!holder) {
@@ -99,21 +99,22 @@
 
   function applyState(state) {
     const overlays = (state && state.overlays) || {};
+    const active = state && state.active;
     const el = ensureGifOverlay();
-    let anyOn = null;
-    for (const key of Object.keys(overlays)) {
-      if (overlays[key]) { anyOn = key; break; }
+    let showKey = active || null;
+    if (!showKey) {
+      for (const key of Object.keys(overlays)) { if (overlays[key]) { showKey = key; break; } }
     }
-    if (anyOn) {
+    if (showKey) {
       try {
         const gifMap = getGifMap();
-        const src = gifMap[anyOn] || gifMap['chicken'];
+        const src = gifMap[showKey] || gifMap['chicken'];
         const img = document.getElementById('gif-overlay-img');
         if (img && src) img.src = src;
-      } catch {}
+      } catch { }
     }
-    el.style.display = anyOn ? 'flex' : 'none';
-    if (anyOn) updateGifLayout();
+    el.style.display = showKey ? 'flex' : 'none';
+    if (showKey) updateGifLayout();
   }
 
   async function pollLoop() {
@@ -137,6 +138,6 @@
   pollLoop();
   window.addEventListener('resize', updateGifLayout);
   if (window.matchMedia) {
-    try { window.matchMedia('(orientation: portrait)').addEventListener('change', updateGifLayout); } catch {}
+    try { window.matchMedia('(orientation: portrait)').addEventListener('change', updateGifLayout); } catch { }
   }
 })();

@@ -12,8 +12,8 @@ app = FastAPI(title="Mango Coco Production Backend")
 # Very small in-memory pubsub of websocket clients
 class Hub:
     def __init__(self) -> None:
-        # Shared state, e.g., {"overlays": {"chicken": True}}
-        self.state: dict = {"overlays": {}}
+        # Shared state, single active overlay name or None, plus flags map
+        self.state: dict = {"active": None, "overlays": {}}
         # Version increments whenever state changes
         self.version: int = 0
         # Event to wake long-poll waiters
@@ -22,7 +22,17 @@ class Hub:
 
     async def set_overlay(self, name: str, enabled: bool) -> None:
         async with self._lock:
-            self.state.setdefault("overlays", {})[name] = enabled
+            overlays: dict = self.state.setdefault("overlays", {})
+            if enabled:
+                # Exclusif: active = name, tous les autres à False
+                for k in list(overlays.keys()):
+                    overlays[k] = (k == name)
+                overlays[name] = True
+                self.state["active"] = name
+            else:
+                overlays[name] = False
+                if self.state.get("active") == name:
+                    self.state["active"] = None
             self.version += 1
             # Wake any pollers
             self.changed.set()
