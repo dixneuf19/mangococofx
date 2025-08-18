@@ -90,19 +90,20 @@
     const containerW = canvas.width;
     const containerH = canvas.height;
 
-    // Dimension cible: 90% de la largeur écran pour la perception (en portrait, l'image est tournée)
+    // Dimension cible: occuper jusqu'à 90% du viewport dans les deux dimensions
+    // (en portrait, l'image est tournée, donc on inverse les contraintes)
     isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    const targetWidthPx = Math.floor(containerW * 0.9);
+    const limitW = containerW * 0.9;
+    const limitH = containerH * 0.9;
+    let k;
     if (isPortrait) {
-      // Après rotation, la largeur perçue = hauteur de l'image non tournée
-      const k = targetWidthPx / imgH;
-      drawW = Math.ceil(imgW * k);
-      drawH = Math.ceil(imgH * k);
+      // Après rotation: width_perçue = drawH, height_perçue = drawW
+      k = Math.min(limitW / imgH, limitH / imgW);
     } else {
-      const k = targetWidthPx / imgW;
-      drawW = Math.ceil(imgW * k);
-      drawH = Math.ceil(imgH * k);
+      k = Math.min(limitW / imgW, limitH / imgH);
     }
+    drawW = Math.ceil(imgW * k);
+    drawH = Math.ceil(imgH * k);
 
     off.width = Math.ceil(drawW);
     off.height = Math.ceil(drawH);
