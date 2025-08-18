@@ -25,8 +25,20 @@
       img.style.transformOrigin = '50% 50%';
       img.src = '/static/chicken-run-movie-dancing.gif';
 
+      // mapping overlay -> gif path
+      const map = document.createElement('script');
+      map.type = 'application/json';
+      map.id = 'gif-map';
+      map.textContent = JSON.stringify({
+        chicken: '/static/chicken-run-movie-dancing.gif',
+        matrix: '/static/matrix-bullet-dodge.gif',
+        superman: '/static/superman-flying.gif',
+        mangococo: '/static/mgcc.gif'
+      });
+
       el.appendChild(img);
       document.body.appendChild(el);
+      document.body.appendChild(map);
     }
     return el;
   }
@@ -53,10 +65,22 @@
 
   function applyState(state) {
     const overlays = (state && state.overlays) || {};
-    const chicken = !!overlays['chicken'];
     const el = ensureGifOverlay();
-    el.style.display = chicken ? 'flex' : 'none';
-    if (chicken) updateGifLayout();
+    const mapEl = document.getElementById('gif-map');
+    let anyOn = null;
+    for (const key of Object.keys(overlays)) {
+      if (overlays[key]) { anyOn = key; break; }
+    }
+    if (anyOn) {
+      try {
+        const gifMap = JSON.parse(mapEl.textContent || '{}');
+        const src = gifMap[anyOn] || gifMap['chicken'];
+        const img = document.getElementById('gif-overlay-img');
+        if (img && src) img.src = src;
+      } catch {}
+    }
+    el.style.display = anyOn ? 'flex' : 'none';
+    if (anyOn) updateGifLayout();
   }
 
   async function pollLoop() {
