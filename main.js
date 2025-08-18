@@ -90,13 +90,19 @@
     const containerW = canvas.width;
     const containerH = canvas.height;
 
-    // Calcul de l'échelle pour couvrir, en tenant compte de la rotation en portrait
+    // Dimension cible: 90% de la largeur écran pour la perception (en portrait, l'image est tournée)
     isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    const scale = isPortrait
-      ? Math.max(containerW / imgH, containerH / imgW) // l'image sera tournée de 90°
-      : Math.max(containerW / imgW, containerH / imgH);
-    drawW = Math.ceil(imgW * scale);
-    drawH = Math.ceil(imgH * scale);
+    const targetWidthPx = Math.floor(containerW * 0.9);
+    if (isPortrait) {
+      // Après rotation, la largeur perçue = hauteur de l'image non tournée
+      const k = targetWidthPx / imgH;
+      drawW = Math.ceil(imgW * k);
+      drawH = Math.ceil(imgH * k);
+    } else {
+      const k = targetWidthPx / imgW;
+      drawW = Math.ceil(imgW * k);
+      drawH = Math.ceil(imgH * k);
+    }
 
     off.width = Math.ceil(drawW);
     off.height = Math.ceil(drawH);
