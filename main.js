@@ -109,64 +109,26 @@
     try {
       const imgData = offCtx.getImageData(0, 0, off.width, off.height);
       const data = imgData.data;
-
-      // 1) Rendre les verres rouge/bleu plus transparents
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i+1];
         const b = data[i+2];
         const a = data[i+3];
 
+        // Heuristics for colored lenses (tweak thresholds as needed)
+        // Red/magenta dominant
         const isRedish = (r > 135 && r - g > 25 && r - b > 25) || (r > 150 && b > 120 && r - g > 30);
+        // Blue or cyan dominant (allow high green for cyan)
         const isBlueCyan = (b > 135 && b - r > 20 && b >= g - 10) || (b > 125 && g > 125 && r < 160 && ((b + g) / 2 - r) > 25);
 
         if (a > 0 && (isRedish || isBlueCyan)) {
-          const factor = isBlueCyan ? 0.35 : 0.5;
+          // Stronger transparency for blue/cyan to ensure it's clearly see-through
+          const factor = isBlueCyan ? 0.35 : 0.5; // blue/cyan more transparent than red
           const minA = isBlueCyan ? 40 : 70;
           const maxA = isBlueCyan ? 160 : 190;
           data[i+3] = Math.min(maxA, Math.max(minA, Math.floor(a * factor)));
         }
       }
-
-      // 2) Amincir la monture à l'intérieur des verres: pixels sombres dans 2 ellipses centrales deviennent translucides
-      const w = off.width;
-      const h = off.height;
-      const lenses = [
-        { cx: w * 0.33, cy: h * 0.5 },
-        { cx: w * 0.67, cy: h * 0.5 }
-      ];
-      const rx = w * 0.24; // demi-largeur des verres (ajustable)
-      const ry = h * 0.28; // demi-hauteur des verres (ajustable)
-
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const idx = (y * w + x) * 4;
-          const r = data[idx];
-          const g = data[idx + 1];
-          const b = data[idx + 2];
-          const a = data[idx + 3];
-          if (a === 0) continue;
-
-          // inside any lens ellipse?
-          let inLens = false;
-          for (let k = 0; k < lenses.length; k++) {
-            const dx = (x - lenses[k].cx) / rx;
-            const dy = (y - lenses[k].cy) / ry;
-            if (dx * dx + dy * dy <= 1.0) { inLens = true; break; }
-          }
-          if (!inLens) continue;
-
-          // Luminance (pixels très sombres = bord/monture)
-          const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          const isDark = luminance < 80;
-
-          if (isDark) {
-            // amincir fortement les bords à l'intérieur de la zone des verres
-            data[idx + 3] = Math.min(120, Math.floor(a * 0.3));
-          }
-        }
-      }
-
       offCtx.putImageData(imgData, 0, 0);
     } catch (e) {
       // Some browsers may restrict getImageData if tainted; we simply skip
