@@ -211,36 +211,25 @@
 
   function ensureMangoLoaded() {
     if (mangoImage || mangoReady) return;
-    const img = new Image();
-    img.onload = () => {
-      mangoImage = img;
-      mangoSpriteW = Math.max(32, Math.floor(img.naturalWidth));
-      mangoSpriteH = Math.max(32, Math.floor(img.naturalHeight));
+    // Utiliser directement un sprite emoji hors-écran
+    const off = document.createElement('canvas');
+    const size = 64;
+    off.width = size; off.height = size;
+    const octx = off.getContext('2d');
+    octx.clearRect(0, 0, size, size);
+    octx.font = `${Math.floor(size*0.9)}px serif`;
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+    octx.fillText('🥭', size/2, size/2);
+    const dataUrl = off.toDataURL('image/png');
+    const fallback = new Image();
+    fallback.onload = () => {
+      mangoImage = fallback;
+      mangoSpriteW = size;
+      mangoSpriteH = size;
       mangoReady = true;
     };
-    img.onerror = () => {
-      // Fallback: dessiner un emoji mangue sur un canvas pour servir de sprite
-      const off = document.createElement('canvas');
-      const size = 64;
-      off.width = size; off.height = size;
-      const octx = off.getContext('2d');
-      octx.clearRect(0, 0, size, size);
-      octx.font = `${Math.floor(size*0.9)}px serif`;
-      octx.textAlign = 'center';
-      octx.textBaseline = 'middle';
-      octx.fillText('🥭', size/2, size/2);
-      // Convertir en Image
-      const dataUrl = off.toDataURL('image/png');
-      const fallback = new Image();
-      fallback.onload = () => {
-        mangoImage = fallback;
-        mangoSpriteW = size;
-        mangoSpriteH = size;
-        mangoReady = true;
-      };
-      fallback.src = dataUrl;
-    };
-    img.src = 'mango.png';
+    fallback.src = dataUrl;
   }
 
   function spawnMango(containerW, containerH) {
