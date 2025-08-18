@@ -128,6 +128,7 @@
 
     // Adjust transparency: reduce opacity in strong red or blue/cyan regions (simule verres semi-transparents)
     try {
+      // La manipulation de pixels nécessite un contexte non "tainted" (HTTPS/serveur). Si ça échoue, on garde l'image brute.
       const imgData = offCtx.getImageData(0, 0, off.width, off.height);
       const data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
@@ -152,9 +153,7 @@
       }
       offCtx.putImageData(imgData, 0, 0);
     } catch (e) {
-      // Some browsers may restrict getImageData if tainted; we simply skip
-      // If the image is local file, should be fine; otherwise overlay full image
-      console.warn('Image processing skipped:', e);
+      // En local file:// ou sans HTTPS, getImageData peut échouer. On ne modifie pas l'image.
     }
 
     // Mémoriser pour l'animation; le loop dessinera à chaque frame
@@ -203,11 +202,9 @@
   }
 
   function onResize() {
-    processGlassesAndRender();
-    // adapter la taille du canvas sprites
+    // Adapter la taille des canvases AVANT de redessiner
     const rect = document.getElementById('cameraContainer').getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    // Adapter aussi le canvas lunettes pour éviter un canvas flou après rotation
     glassesCanvas.width = Math.floor(rect.width * dpr);
     glassesCanvas.height = Math.floor(rect.height * dpr);
     glassesCanvas.style.width = rect.width + 'px';
@@ -216,6 +213,7 @@
     spritesCanvas.height = Math.floor(rect.height * dpr);
     spritesCanvas.style.width = rect.width + 'px';
     spritesCanvas.style.height = rect.height + 'px';
+    processGlassesAndRender();
   }
 
   function ensureSpritesLoaded() {
@@ -299,7 +297,7 @@
   // Aucun bouton retour
 
   glassesSrc.addEventListener('load', () => {
-    processGlassesAndRender();
+    onResize(); // met à l'échelle les canvases puis dessine
     startAnimation();
     ensureSpritesLoaded();
   });
