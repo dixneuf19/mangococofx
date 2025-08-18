@@ -71,7 +71,6 @@
 
     const containerRect = document.getElementById('cameraContainer').getBoundingClientRect();
     const canvas = glassesCanvas;
-    const ctx = canvas.getContext('2d');
 
     // Match canvas resolution to container for crisp rendering
     const dpr = window.devicePixelRatio || 1;
@@ -175,7 +174,7 @@
     const phase = t * Math.PI * 2 * freqHz;
     const amp = Math.round(Math.min(containerW, containerH) * 0.01); // 1% d'amplitude
     const bob = Math.sin(phase) * amp;
-    const scale = 1 + 0.01 * Math.sin(phase * 0.5); // 1% de pulsation
+    const scale = 1 + 0.03 * Math.sin(phase * 0.5); // 3% de pulsation (breathing accentué)
 
     isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
     ctx.save();
