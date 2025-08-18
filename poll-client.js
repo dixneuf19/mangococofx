@@ -1,6 +1,7 @@
 (function(){
   let version = -1;
   let aborted = false;
+  let gifMapCache = null;
 
   function ensureGifOverlay() {
     let el = document.getElementById('gif-overlay');
@@ -43,6 +44,39 @@
     return el;
   }
 
+  function getGifMap(){
+    if (gifMapCache) return gifMapCache;
+    const mapEl = document.getElementById('gif-map');
+    try { gifMapCache = JSON.parse(mapEl?.textContent || '{}'); }
+    catch { gifMapCache = {}; }
+    return gifMapCache;
+  }
+
+  function preloadGifs(){
+    const gifs = getGifMap();
+    let holder = document.getElementById('gif-preloads');
+    if (!holder) {
+      holder = document.createElement('div');
+      holder.id = 'gif-preloads';
+      holder.style.position = 'fixed';
+      holder.style.width = '0';
+      holder.style.height = '0';
+      holder.style.overflow = 'hidden';
+      holder.style.pointerEvents = 'none';
+      holder.style.opacity = '0';
+      document.body.appendChild(holder);
+    }
+    Object.values(gifs).forEach(src => {
+      if (!src) return;
+      // Create a tiny hidden img to warm cache
+      const im = new Image();
+      im.decoding = 'async';
+      im.loading = 'eager';
+      im.src = src;
+      holder.appendChild(im);
+    });
+  }
+
   function updateGifLayout() {
     const img = document.getElementById('gif-overlay-img');
     const el = document.getElementById('gif-overlay');
@@ -66,14 +100,13 @@
   function applyState(state) {
     const overlays = (state && state.overlays) || {};
     const el = ensureGifOverlay();
-    const mapEl = document.getElementById('gif-map');
     let anyOn = null;
     for (const key of Object.keys(overlays)) {
       if (overlays[key]) { anyOn = key; break; }
     }
     if (anyOn) {
       try {
-        const gifMap = JSON.parse(mapEl.textContent || '{}');
+        const gifMap = getGifMap();
         const src = gifMap[anyOn] || gifMap['chicken'];
         const img = document.getElementById('gif-overlay-img');
         if (img && src) img.src = src;
@@ -98,6 +131,9 @@
     }
   }
 
+  // Prepare overlay and warm GIF cache immediately
+  ensureGifOverlay();
+  preloadGifs();
   pollLoop();
   window.addEventListener('resize', updateGifLayout);
   if (window.matchMedia) {
