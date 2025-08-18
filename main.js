@@ -104,8 +104,8 @@
     // Dimension cible: occuper jusqu'à 90% du viewport dans les deux dimensions
     // (en portrait, l'image est tournée, donc on inverse les contraintes)
     isPortrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    const limitW = containerW * 0.95;
-    const limitH = containerH * 0.95;
+    const limitW = containerW * 0.98;
+    const limitH = containerH * 0.98;
     let k;
     if (isPortrait) {
       // Après rotation: width_perçue = drawH, height_perçue = drawW
