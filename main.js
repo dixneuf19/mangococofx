@@ -17,13 +17,12 @@
   let rafId = null;
   let lastTickMs = 0;
 
-  // Sprite mangue (PNG local 'mango.png' si présent, sinon fallback emoji)
-  let mangoImage = null;
-  let mangoReady = false;
-  let mangoSpriteW = 64;
-  let mangoSpriteH = 64;
-  let lastMangoSpawnMs = 0;
-  const mangoes = []; // { x, y, vx, w, h, rotate }
+  // Sprites (emojis) qui traversent l'écran
+  const SPRITE_EMOJIS = ['🥭', '🥥', '🎺', '🥁'];
+  const spriteImages = []; // { img, w, h }
+  let spritesReady = false;
+  let lastSpriteSpawnMs = 0;
+  const sprites = []; // { startX, endX, yBase, amp, phase, waves, w, h, img, elapsedMs, durationMs, baseRot, spin }
 
   function showIntro() {
     viewer.classList.remove('active');
@@ -196,8 +195,8 @@
     ctx.drawImage(processedCanvas, -processedW / 2, -processedH / 2);
     ctx.restore();
 
-    // ---- FX: Mangue qui traverse l'écran ----
-    animateMangoes(now, dtMs, containerW, containerH, ctx);
+    // ---- FX: Sprites qui traversent l'écran ----
+    animateSprites(now, dtMs, containerW, containerH, ctx);
   }
 
   function startAnimation() {
@@ -213,64 +212,70 @@
     processGlassesAndRender();
   }
 
-  function ensureMangoLoaded() {
-    if (mangoImage || mangoReady) return;
-    // Utiliser directement un sprite emoji hors-écran
-    const off = document.createElement('canvas');
-    const size = 64;
-    off.width = size; off.height = size;
-    const octx = off.getContext('2d');
-    octx.clearRect(0, 0, size, size);
-    octx.font = `${Math.floor(size*0.9)}px Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, system-ui, sans-serif`;
-    octx.textAlign = 'center';
-    octx.textBaseline = 'middle';
-    octx.fillText('🥭', size/2, size/2);
-    const dataUrl = off.toDataURL('image/png');
-    const fallback = new Image();
-    fallback.onload = () => {
-      mangoImage = fallback;
-      mangoSpriteW = size;
-      mangoSpriteH = size;
-      mangoReady = true;
-    };
-    fallback.src = dataUrl;
+  function ensureSpritesLoaded() {
+    if (spritesReady) return;
+    const size = 96;
+    const font = `${Math.floor(size*0.9)}px Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, system-ui, sans-serif`;
+    let loaded = 0;
+    SPRITE_EMOJIS.forEach((emoji, idx) => {
+      const off = document.createElement('canvas');
+      off.width = size; off.height = size;
+      const octx = off.getContext('2d');
+      octx.clearRect(0, 0, size, size);
+      octx.font = font;
+      octx.textAlign = 'center';
+      octx.textBaseline = 'middle';
+      octx.fillText(emoji, size/2, size/2);
+      const img = new Image();
+      img.onload = () => {
+        spriteImages[idx] = { img, w: size, h: size };
+        loaded += 1;
+        if (loaded === SPRITE_EMOJIS.length) spritesReady = true;
+      };
+      img.src = off.toDataURL('image/png');
+    });
   }
 
-  function spawnMango(containerW, containerH) {
-    if (!mangoReady || !mangoImage) return;
-    const direction = Math.random() < 0.5 ? 'ltr' : 'rtl';
-    const travelTimeMs = 1800 + Math.random()*400; // ~2s
-    const speedPxPerMs = (containerW + mangoSpriteW*2) / travelTimeMs;
-    const y = Math.floor(containerH * (0.15 + Math.random()*0.7));
-    const scale = 0.5 + Math.random()*0.5; // 0.5x .. 1x
-    const w = Math.floor(mangoSpriteW * scale);
-    const h = Math.floor(mangoSpriteH * scale);
-    const rotate = (Math.random()-0.5) * 0.3; // petite inclinaison
-    const x = direction === 'ltr' ? -w : containerW + w;
-    const vx = direction === 'ltr' ? speedPxPerMs : -speedPxPerMs;
-    mangoes.push({ x, y, vx, w, h, rotate });
+  function spawnSprite(containerW, containerH) {
+    if (!spritesReady || spriteImages.length === 0) return;
+    const kindIndex = Math.floor(Math.random() * spriteImages.length);
+    const { img, w: baseW, h: baseH } = spriteImages[kindIndex] || spriteImages[0];
+    const directionLTR = Math.random() < 0.5;
+    const r = Math.random();
+    const bias = 1 - r * r; // favorise les tailles grandes
+    const scale = 1.0 + bias * 0.8; // 1.0..1.8
+    const w = Math.floor(baseW * scale);
+    const h = Math.floor(baseH * scale);
+    const startX = directionLTR ? -w : containerW + w;
+    const endX = directionLTR ? containerW + w : -w;
+    const yBase = Math.floor(containerH * (0.1 + Math.random() * 0.8));
+    const amp = Math.floor(containerH * (0.05 + Math.random() * 0.12));
+    const waves = 0.5 + Math.random() * 1.5;
+    const phase = Math.random() * Math.PI * 2;
+    const durationMs = 2500 + Math.random() * 3000; // 2.5..5.5s
+    const baseRot = (Math.random() - 0.5) * 0.5;
+    const spin = (Math.random() - 0.5) * 0.8;
+    sprites.push({ startX, endX, yBase, amp, phase, waves, w, h, img, elapsedMs: 0, durationMs, baseRot, spin });
   }
 
-  function animateMangoes(nowMs, dtMs, containerW, containerH, ctx) {
-    // Spawn initial rapide puis toutes les ~2s
-    if ((mangoes.length === 0 && nowMs - lastMangoSpawnMs > 200) || (nowMs - lastMangoSpawnMs > 2000)) {
-      spawnMango(containerW, containerH);
-      lastMangoSpawnMs = nowMs;
+  function animateSprites(nowMs, dtMs, containerW, containerH, ctx) {
+    // Fréquence: 1 toutes les ~5s (avec un premier spawn rapide)
+    if ((sprites.length === 0 && nowMs - lastSpriteSpawnMs > 200) || (nowMs - lastSpriteSpawnMs > 5000)) {
+      spawnSprite(containerW, containerH);
+      lastSpriteSpawnMs = nowMs;
     }
-
-    // Avancer et dessiner
-    for (let i = mangoes.length - 1; i >= 0; i--) {
-      const m = mangoes[i];
-      m.x += m.vx * dtMs; // vitesse en px/ms
-      // Retirer si hors écran
-      if (m.x < -m.w*2 || m.x > containerW + m.w*2) {
-        mangoes.splice(i, 1);
-        continue;
-      }
+    for (let i = sprites.length - 1; i >= 0; i--) {
+      const s = sprites[i];
+      s.elapsedMs += dtMs;
+      const u = s.elapsedMs / s.durationMs;
+      if (u >= 1) { sprites.splice(i, 1); continue; }
+      const x = s.startX + (s.endX - s.startX) * u;
+      const y = s.yBase + s.amp * Math.sin(s.phase + u * Math.PI * 2 * s.waves);
+      const rot = s.baseRot + 0.25 * Math.sin(s.phase + u * Math.PI * 2) + s.spin * (u - 0.5);
       ctx.save();
-      ctx.translate(m.x, m.y);
-      ctx.rotate(m.rotate);
-      ctx.drawImage(mangoImage, -m.w/2, -m.h/2, m.w, m.h);
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.drawImage(s.img, -s.w/2, -s.h/2, s.w, s.h);
       ctx.restore();
     }
   }
@@ -281,7 +286,7 @@
     await startCamera();
     processGlassesAndRender();
     startAnimation();
-    ensureMangoLoaded();
+    ensureSpritesLoaded();
   });
 
   // Aucun bouton retour
@@ -289,7 +294,7 @@
   glassesSrc.addEventListener('load', () => {
     processGlassesAndRender();
     startAnimation();
-    ensureMangoLoaded();
+    ensureSpritesLoaded();
   });
 
   window.addEventListener('resize', onResize);
