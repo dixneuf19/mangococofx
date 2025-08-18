@@ -259,8 +259,8 @@
   }
 
   function animateSprites(nowMs, dtMs, containerW, containerH, ctx) {
-    // Fréquence: 1 toutes les ~5s (avec un premier spawn rapide)
-    if ((sprites.length === 0 && nowMs - lastSpriteSpawnMs > 200) || (nowMs - lastSpriteSpawnMs > 5000)) {
+    // Fréquence: 1 toutes les ~2.5s (avec un premier spawn rapide)
+    if ((sprites.length === 0 && nowMs - lastSpriteSpawnMs > 200) || (nowMs - lastSpriteSpawnMs > 2500)) {
       spawnSprite(containerW, containerH);
       lastSpriteSpawnMs = nowMs;
     }
