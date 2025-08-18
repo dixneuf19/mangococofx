@@ -22,7 +22,7 @@
       img.style.maxWidth = '100%';
       img.style.maxHeight = '100%';
       img.style.objectFit = 'contain';
-      img.src = '/static/@chicken-run-movie-dancing.gif';
+      img.src = '/static/chicken-run-movie-dancing.gif';
 
       el.appendChild(img);
       document.body.appendChild(el);

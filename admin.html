@@ -27,12 +27,8 @@
     </header>
     <main>
       <div class="grid">
-        <div class="card">
-          <div class="row" style="justify-content: space-between;">
-            <div><span class="emoji">🐔</span> Poulet dansant (plein écran)</div>
-            <button id="toggle-chicken" class="btn">Activer</button>
-          </div>
-          <small>Déclenche un GIF en plein écran sur les clients connectés.</small>
+        <div class="card" style="text-align:center">
+          <button id="toggle-chicken" class="btn" style="font-size:32px; line-height:1">🐔</button>
         </div>
       </div>
     </main>
@@ -48,7 +44,6 @@
       }
       button.addEventListener('click', async () => {
         on = !on;
-        button.textContent = on ? 'Désactiver' : 'Activer';
         button.classList.toggle('on', on);
         try { await setOverlay('chicken', on); } catch(e) { alert('Erreur API'); }
       });
