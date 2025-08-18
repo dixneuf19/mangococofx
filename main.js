@@ -60,7 +60,9 @@
       }
       if (!mediaStream) throw lastErr || new Error('Impossible d\'accéder à la caméra');
 
+      // iOS Safari nécessite playsinline + interaction utilisateur (déjà via bouton)
       video.srcObject = mediaStream;
+      video.setAttribute('playsinline', '');
       await video.play().catch(() => {});
     } catch (err) {
       console.error('Camera error', err);
@@ -205,6 +207,11 @@
     // adapter la taille du canvas sprites
     const rect = document.getElementById('cameraContainer').getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
+    // Adapter aussi le canvas lunettes pour éviter un canvas flou après rotation
+    glassesCanvas.width = Math.floor(rect.width * dpr);
+    glassesCanvas.height = Math.floor(rect.height * dpr);
+    glassesCanvas.style.width = rect.width + 'px';
+    glassesCanvas.style.height = rect.height + 'px';
     spritesCanvas.width = Math.floor(rect.width * dpr);
     spritesCanvas.height = Math.floor(rect.height * dpr);
     spritesCanvas.style.width = rect.width + 'px';
