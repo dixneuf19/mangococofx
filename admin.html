@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin — Mango Coco FX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; background: #0b0e17; color: #fff; }
+      header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      main { padding: 20px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+      .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 16px; }
+      .title { font-weight: 800; margin: 0 0 12px; }
+      .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; font-weight: 700; }
+      .btn.on { background: #00c853; border-color: #00c853; }
+      .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      small { opacity: 0.75; }
+      .emoji { font-size: 22px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="title">Panneau Admin — Mango Coco Production</div>
+      <small>Pas de protection (dev)</small>
+    </header>
+    <main>
+      <div class="grid">
+        <div class="card">
+          <div class="row" style="justify-content: space-between;">
+            <div><span class="emoji">🐔</span> Poulet dansant (plein écran)</div>
+            <button id="toggle-chicken" class="btn">Activer</button>
+          </div>
+          <small>Déclenche un GIF en plein écran sur les clients connectés.</small>
+        </div>
+      </div>
+    </main>
+    <script>
+      const button = document.getElementById('toggle-chicken');
+      let on = false;
+      async function setOverlay(name, enabled) {
+        const res = await fetch(`/api/overlay/${encodeURIComponent(name)}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ on: enabled })
+        });
+        if (!res.ok) throw new Error('API error');
+      }
+      button.addEventListener('click', async () => {
+        on = !on;
+        button.textContent = on ? 'Désactiver' : 'Activer';
+        button.classList.toggle('on', on);
+        try { await setOverlay('chicken', on); } catch(e) { alert('Erreur API'); }
+      });
+    </script>
+  </body>
+</html>
