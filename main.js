@@ -7,7 +7,6 @@
   const errorEl = document.getElementById('error');
   const glassesCanvas = document.getElementById('glassesCanvas');
   const glassesSrc = document.getElementById('glassesSrc');
-  const toast = document.getElementById('toast');
   // Pas d'UI overlay
 
   let mediaStream = null;
@@ -24,7 +23,6 @@
   let spritesReady = false;
   let lastSpriteSpawnMs = 0;
   const sprites = []; // { startX, endX, yBase, amp, phase, waves, w, h, img, elapsedMs, durationMs, baseRot, spin }
-  let toastTimeout = null;
 
   function showIntro() {
     viewer.classList.remove('active');
@@ -278,49 +276,11 @@
       ctx.translate(x, y);
       ctx.rotate(rot);
       ctx.drawImage(s.img, -s.w/2, -s.h/2, s.w, s.h);
-      // Interaction: si clic dans la zone du sprite, afficher le toast 3s
-      const hit = registerSpriteHitArea(x, y, s.w, s.h, rot);
       ctx.restore();
     }
   }
 
-  // Gestion des zones cliquables des sprites
-  const activeHitAreas = []; // { x, y, w, h, rot, timeMs }
-  function registerSpriteHitArea(x, y, w, h, rot) {
-    // Empile une zone valide 100ms pour permettre le clic
-    const now = performance.now();
-    activeHitAreas.push({ x, y, w, h, rot, timeMs: now });
-    // Purge anciennes
-    while (activeHitAreas.length > 50) activeHitAreas.shift();
-  }
-
-  function handleCanvasClick(evt) {
-    const rect = glassesCanvas.getBoundingClientRect();
-    const px = (evt.clientX - rect.left) * (glassesCanvas.width / rect.width);
-    const py = (evt.clientY - rect.top) * (glassesCanvas.height / rect.height);
-    const now = performance.now();
-    // Parcourt les dernières zones
-    for (let i = activeHitAreas.length - 1; i >= 0; i--) {
-      const h = activeHitAreas[i];
-      if (now - h.timeMs > 120) { activeHitAreas.splice(i,1); continue; }
-      // Approximation: test AABB sans rotation (suffisant pour l'effet)
-      if (px >= h.x - h.w/2 && px <= h.x + h.w/2 && py >= h.y - h.h/2 && py <= h.y + h.h/2) {
-        showToast();
-        break;
-      }
-    }
-  }
-
-  function showToast() {
-    if (!toast) return;
-    toast.hidden = false;
-    clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => { toast.hidden = true; }, 3000);
-  }
-
   // Events
-  // Autoriser les clics sur les emojis en redirigeant l'événement au canvas
-  document.getElementById('cameraContainer').addEventListener('click', handleCanvasClick);
   startButton.addEventListener('click', async () => {
     showViewer();
     await startCamera();
