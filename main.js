@@ -15,6 +15,7 @@
   let processedW = 0;
   let processedH = 0;
   let rafId = null;
+  let lastTickMs = 0;
 
   // Sprite mangue (PNG local 'mango.png' si présent, sinon fallback emoji)
   let mangoImage = null;
@@ -177,7 +178,10 @@
     ctx.clearRect(0, 0, containerW, containerH);
 
     // Animation légère: rebond vertical + micro respiration
-    const t = (ts || performance.now()) / 1000;
+    const now = ts || performance.now();
+    const dtMs = lastTickMs ? Math.min(50, now - lastTickMs) : 16; // clamp pour éviter les sauts
+    lastTickMs = now;
+    const t = now / 1000;
     const freqHz = 0.7; // vitesse
     const phase = t * Math.PI * 2 * freqHz;
     const amp = Math.round(Math.min(containerW, containerH) * 0.01); // 1% d'amplitude
@@ -193,7 +197,7 @@
     ctx.restore();
 
     // ---- FX: Mangue qui traverse l'écran ----
-    animateMangoes(ts || performance.now(), containerW, containerH, ctx);
+    animateMangoes(now, dtMs, containerW, containerH, ctx);
   }
 
   function startAnimation() {
@@ -217,7 +221,7 @@
     off.width = size; off.height = size;
     const octx = off.getContext('2d');
     octx.clearRect(0, 0, size, size);
-    octx.font = `${Math.floor(size*0.9)}px serif`;
+    octx.font = `${Math.floor(size*0.9)}px Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, system-ui, sans-serif`;
     octx.textAlign = 'center';
     octx.textBaseline = 'middle';
     octx.fillText('🥭', size/2, size/2);
@@ -247,9 +251,9 @@
     mangoes.push({ x, y, vx, w, h, rotate });
   }
 
-  function animateMangoes(nowMs, containerW, containerH, ctx) {
-    // Spawn toutes les ~2s
-    if (nowMs - lastMangoSpawnMs > 2000) {
+  function animateMangoes(nowMs, dtMs, containerW, containerH, ctx) {
+    // Spawn initial rapide puis toutes les ~2s
+    if ((mangoes.length === 0 && nowMs - lastMangoSpawnMs > 200) || (nowMs - lastMangoSpawnMs > 2000)) {
       spawnMango(containerW, containerH);
       lastMangoSpawnMs = nowMs;
     }
@@ -257,7 +261,7 @@
     // Avancer et dessiner
     for (let i = mangoes.length - 1; i >= 0; i--) {
       const m = mangoes[i];
-      m.x += m.vx * (1/60); // approx dt pour fluidité sans stocker dt
+      m.x += m.vx * dtMs; // vitesse en px/ms
       // Retirer si hors écran
       if (m.x < -m.w*2 || m.x > containerW + m.w*2) {
         mangoes.splice(i, 1);
