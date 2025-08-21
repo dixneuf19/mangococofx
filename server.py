@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Set
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Mango Coco Production Backend")
+
 
 # Set caching headers: cache static assets, avoid caching HTML and APIs
 @app.middleware("http")
@@ -34,6 +34,7 @@ async def add_cache_headers(request: Request, call_next):
 
     return response
 
+
 # Very small in-memory pubsub of websocket clients
 class Hub:
     def __init__(self) -> None:
@@ -51,7 +52,7 @@ class Hub:
             if enabled:
                 # Exclusif: active = name, tous les autres à False
                 for k in list(overlays.keys()):
-                    overlays[k] = (k == name)
+                    overlays[k] = k == name
                 overlays[name] = True
                 self.state["active"] = name
             else:
@@ -62,14 +63,19 @@ class Hub:
             # Wake any pollers
             self.changed.set()
 
+
 hub = Hub()
+
 
 @app.post("/api/overlay/{name}")
 async def set_overlay(name: str, request: Request):
     data = await request.json()
     enabled = bool(data.get("on", False))
     await hub.set_overlay(name, enabled)
-    return JSONResponse({"ok": True, "name": name, "on": enabled, "version": hub.version})
+    return JSONResponse(
+        {"ok": True, "name": name, "on": enabled, "version": hub.version}
+    )
+
 
 @app.get("/api/poll")
 async def poll(since: int = -1, timeout_ms: int = 25000):
@@ -86,12 +92,15 @@ async def poll(since: int = -1, timeout_ms: int = 25000):
         hub.changed.clear()
     return JSONResponse({"version": hub.version, "state": hub.state})
 
+
 # Serve static files (frontend) from repo root
 app.mount("/static", StaticFiles(directory="static", html=False), name="static")
+
 
 @app.get("/")
 async def index():
     return FileResponse("static/index.html")
+
 
 @app.get("/admin")
 async def admin():
