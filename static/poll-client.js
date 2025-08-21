@@ -114,6 +114,10 @@
       } catch { }
     }
     el.style.display = showKey ? 'flex' : 'none';
+    // When overlay is visible, intercept all clicks/taps so underlying UI isn't clickable
+    el.style.pointerEvents = showKey ? 'auto' : 'none';
+    // Toggle a global class so pages can react (e.g., hide capture button)
+    try { (document.documentElement || document.body).classList.toggle('gif-active', !!showKey); } catch {}
     if (showKey) updateGifLayout();
   }
 

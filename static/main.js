@@ -49,6 +49,12 @@
     viewer.classList.add('active');
     // Affiche le bouton capture dans ce mode
     captureButton.hidden = false;
+    // If a GIF overlay is active at the moment of entering the viewer, ensure class is applied (poll-client sets it too)
+    try {
+      const overlay = document.getElementById('gif-overlay');
+      const active = overlay && overlay.style.display !== 'none';
+      (document.documentElement || document.body).classList.toggle('gif-active', !!active);
+    } catch {}
   }
 
   async function startCamera() {
