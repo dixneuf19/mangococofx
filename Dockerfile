@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1.6
 
-# Build and runtime image with uv + Python 3.11
-FROM ghcr.io/astral-sh/uv:python3.11-bookworm AS app
+FROM ghcr.io/astral-sh/uv:python3.13-trixie AS app
 
 WORKDIR /app
 
@@ -18,4 +17,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Run the FastAPI app (binds to PORT env)
-CMD ["sh", "-c", "uv run uvicorn server:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "${PORT:-8080}"]
