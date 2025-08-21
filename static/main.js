@@ -270,8 +270,17 @@
       }
 
       // Export en blob (meilleure qualité que dataURL) et proposer partage/téléchargement
-      const blob = await new Promise(resolve => out.toBlob(resolve, 'image/jpeg', 0.95));
-      if (!blob) throw new Error('Capture échouée');
+      let blob = await new Promise(resolve => out.toBlob(resolve, 'image/jpeg', 0.95));
+      if (!blob) {
+        // Fallback Safari anciens: via dataURL → blob
+        const dataUrl = out.toDataURL('image/jpeg', 0.95);
+        try {
+          const resp = await fetch(dataUrl);
+          blob = await resp.blob();
+        } catch (_) {
+          throw new Error('Capture échouée');
+        }
+      }
 
       const file = new File([blob], `mangococo-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
