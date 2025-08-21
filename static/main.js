@@ -8,6 +8,7 @@
   const glassesCanvas = document.getElementById('glassesCanvas');
   const spritesCanvas = document.getElementById('spritesCanvas');
   const glassesSrc = document.getElementById('glassesSrc');
+  const captureButton = document.getElementById('captureButton');
   // Pas d'UI overlay
 
   let mediaStream = null;
@@ -46,6 +47,8 @@
   function showViewer() {
     intro.classList.remove('active');
     viewer.classList.add('active');
+    // Affiche le bouton capture dans ce mode
+    captureButton.hidden = false;
   }
 
   async function startCamera() {
@@ -87,6 +90,7 @@
       mediaStream.getTracks().forEach(t => t.stop());
       mediaStream = null;
     }
+    captureButton.hidden = true;
   }
 
   function processGlassesAndRender() {
@@ -228,6 +232,71 @@
     processGlassesAndRender();
   }
 
+  // Capture d'une photo: composite vidéo + sprites + lunettes dans un canvas
+  async function capturePhoto() {
+    try {
+      // Taille de sortie basée sur le conteneur pour coller au rendu
+      const rect = document.getElementById('cameraContainer').getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const outW = Math.floor(rect.width * dpr);
+      const outH = Math.floor(rect.height * dpr);
+
+      const out = document.createElement('canvas');
+      out.width = outW; out.height = outH;
+      const ctx = out.getContext('2d');
+
+      // 1) Caméra: dessine la frame vidéo courante
+      // Utilise drawImage avec cover pour respecter l'object-fit
+      // Calcule le rectangle source de la vidéo pour remplir outW/outH en conservant le ratio
+      const vw = video.videoWidth || outW;
+      const vh = video.videoHeight || outH;
+      if (vw > 0 && vh > 0) {
+        const scale = Math.max(outW / vw, outH / vh);
+        const drawW = Math.floor(vw * scale);
+        const drawH = Math.floor(vh * scale);
+        const dx = Math.floor((outW - drawW) / 2);
+        const dy = Math.floor((outH - drawH) / 2);
+        ctx.drawImage(video, 0, 0, vw, vh, dx, dy, drawW, drawH);
+      }
+
+      // 2) Sprites: copier le canvas sprites au même scale
+      if (spritesCanvas.width && spritesCanvas.height) {
+        ctx.drawImage(spritesCanvas, 0, 0, spritesCanvas.width, spritesCanvas.height, 0, 0, outW, outH);
+      }
+
+      // 3) Lunettes: copier le canvas lunettes (déjà orienté)
+      if (glassesCanvas.width && glassesCanvas.height) {
+        ctx.drawImage(glassesCanvas, 0, 0, glassesCanvas.width, glassesCanvas.height, 0, 0, outW, outH);
+      }
+
+      // Export en blob (meilleure qualité que dataURL) et proposer partage/téléchargement
+      const blob = await new Promise(resolve => out.toBlob(resolve, 'image/jpeg', 0.95));
+      if (!blob) throw new Error('Capture échouée');
+
+      const file = new File([blob], `mangococo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+      // Partage natif si disponible (mobile)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: 'Mango Coco FX', text: 'Photo 3D 🥭🥥🎺' });
+          return;
+        } catch (_) { /* fallback to download */ }
+      }
+
+      // Téléchargement direct
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) {
+      console.error('capture error', e);
+    }
+  }
+
   function ensureSpritesLoaded() {
     if (spritesReady) return;
     const size = 96;
@@ -305,6 +374,8 @@
     ensureSpritesLoaded();
     onResize();
   });
+
+  captureButton.addEventListener('click', capturePhoto);
 
   // Aucun bouton retour
 

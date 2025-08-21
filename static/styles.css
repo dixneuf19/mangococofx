@@ -95,7 +95,20 @@ body {
   transform-origin: 50% 50%;
   background: transparent;
 }
-/* Aucun UI overlay pour un mode plein écran sans distraction */
+/* Bouton capture */
+#captureButton {
+  position: absolute;
+  bottom: 24px; left: 50%; transform: translateX(-50%);
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.85);
+  background: rgba(0,0,0,0.35);
+  color: #fff; font-size: 28px; line-height: 1;
+  display: grid; place-items: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+}
+#captureButton:active { transform: translateX(-50%) scale(0.96); }
 
 .error { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #200; color: #faa; padding: 12px 16px; border-radius: 12px; border: 1px solid #a55; }
 
