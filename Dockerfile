@@ -17,4 +17,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Run the FastAPI app (binds to PORT env)
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "${PORT:-8080}"]
+CMD ["sh", "-c", "uv run uvicorn server:app --host 0.0.0.0 --port ${PORT:-8080}"]
