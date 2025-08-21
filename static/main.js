@@ -284,12 +284,21 @@
 
       const file = new File([blob], `mangococo-${Date.now()}.jpg`, { type: 'image/jpeg' });
 
-      // Partage natif si disponible (mobile)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // Partage natif si disponible (mobile). Essaye d'abord avec fichiers, puis sans fichier (légende seulement)
+      const shareTitle = 'Mango Coco FX';
+      const shareText = 'Photo 3D 🥭🥥🎺 — @mangococo.brassband';
+      if (navigator.share) {
         try {
-          await navigator.share({ files: [file], title: 'Mango Coco FX', text: 'Photo 3D 🥭🥥🎺' });
-          return;
-        } catch (_) { /* fallback to download */ }
+          // Même si canShare renvoie false par prudence, de nombreux navigateurs acceptent share(files)
+          await navigator.share({ files: [file], title: shareTitle, text: shareText });
+          return; // succès
+        } catch (err) {
+          // Si le partage avec fichier n'est pas supporté, tente un partage texte simple (sans image)
+          try {
+            await navigator.share({ title: shareTitle, text: shareText });
+            // L'image ne peut pas être jointe: on tombe ensuite sur le téléchargement pour la récupérer
+          } catch (_) { /* ignore and continue to download */ }
+        }
       }
 
       // Téléchargement direct
