@@ -9,6 +9,31 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Mango Coco Production Backend")
 
+# Set caching headers: cache static assets, avoid caching HTML and APIs
+@app.middleware("http")
+async def add_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+
+    if request.method in ("GET", "HEAD"):
+        # Cache static assets on CDN and browsers for 5 minutes
+        if path.startswith("/static/"):
+            cache_seconds = 300
+            cache_value = f"public, max-age={cache_seconds}, s-maxage={cache_seconds}"
+            response.headers["Cache-Control"] = cache_value
+            # Helpful for CDNs when compression varies
+            response.headers.setdefault("Vary", "Accept-Encoding")
+        # Do not cache HTML pages
+        elif path in ("/", "/admin") or path.endswith(".html"):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        # APIs should not be cached by default
+        elif path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+
+    return response
+
 # Very small in-memory pubsub of websocket clients
 class Hub:
     def __init__(self) -> None:
