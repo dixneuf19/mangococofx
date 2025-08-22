@@ -111,16 +111,16 @@ body {
 /* Hashtag overlay in viewer */
 #hashtagOverlay {
   position: absolute;
-  right: 12px; bottom: 12px;
+  right: 22px; bottom: 22px;
   padding: 8px 12px;
   border-radius: 10px;
-  background: rgba(0,0,0,0.55);
+  background: linear-gradient(135deg, rgba(255,0,102,0.75), rgba(0,217,255,0.75));
   color: #fff;
   font-weight: 800;
   letter-spacing: 0.2px;
   font-size: clamp(12px, 2.8vw, 18px);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
   backdrop-filter: blur(6px);
   pointer-events: none;
   transform-origin: 100% 100%;

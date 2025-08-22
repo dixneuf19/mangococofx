@@ -292,7 +292,7 @@
       // 4) Hashtag: dessiner le texte incliné, orienté comme les lunettes
       try {
         const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-        const margin = Math.floor(outH * 0.02);
+        const margin = Math.floor(outH * 0.03); // un peu plus de marge pour éviter le crop
         const padY = Math.max(6, Math.floor(outH * 0.006));
         const padX = Math.max(8, Math.floor(outW * 0.01));
         const fontSizePx = Math.max(14, Math.floor(Math.min(outW, outH) * 0.028));
@@ -325,9 +325,13 @@
         ctx.lineTo(x1, y1 + r);
         ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        // Gradient fond style lunettes 3D (rose -> cyan)
+        const grad = ctx.createLinearGradient(x1, y1, 0, 0);
+        grad.addColorStop(0, 'rgba(255,0,102,0.85)');
+        grad.addColorStop(1, 'rgba(0,217,255,0.85)');
+        ctx.fillStyle = grad;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
         ctx.lineWidth = Math.max(1, Math.floor(rectH * 0.06));
         ctx.stroke();
         // Texte
