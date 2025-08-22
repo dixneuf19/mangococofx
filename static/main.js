@@ -64,7 +64,7 @@
   function updateHashtagOverlayTransform() {
     if (!hashtagOverlay) return;
     const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    const tiltDeg = 6; // léger tilt inversé
+    const tiltDeg = 23; // léger tilt inversé
     const totalDeg = (portrait ? 90 : 0) + tiltDeg;
     hashtagOverlay.style.transformOrigin = '100% 100%';
     hashtagOverlay.style.transform = `rotate(${totalDeg}deg)`;
@@ -289,30 +289,48 @@
         ctx.drawImage(glassesCanvas, 0, 0, glassesCanvas.width, glassesCanvas.height, 0, 0, outW, outH);
       }
 
-      // 4) Hashtag: dessiner le texte incliné, orienté comme les lunettes
+      // 4) Hashtag: dessiner en utilisant les mêmes styles que l'overlay DOM
       try {
         const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-        const margin = Math.floor(Math.min(outW, outH) * 0.1); // marge plus grande pour éviter le crop
-        const padY = Math.max(6, Math.floor(outH * 0.006));
-        const padX = Math.max(8, Math.floor(outW * 0.01));
-        const fontSizePx = Math.max(14, Math.floor(Math.min(outW, outH) * 0.028));
-        const text = '#mangococo.brassband';
-        const tiltRad = 6 * Math.PI / 180;
-        const portraitRad = portrait ? Math.PI / 2 : 0;
+        const style = hashtagOverlay ? getComputedStyle(hashtagOverlay) : null;
+        const dpr = window.devicePixelRatio || 1;
+        const text = (hashtagOverlay && (hashtagOverlay.textContent || '').trim()) || '#mangococo.brassband';
+
+        // Mesures dérivées des styles calculés pour correspondre au DOM
+        const rightPx = style ? parseFloat(style.right || '28') : 28;
+        const bottomPx = style ? parseFloat(style.bottom || '28') : 28;
+        const padX = style ? Math.max(0, Math.round(parseFloat(style.paddingLeft || '12') * dpr)) : Math.round(12 * dpr);
+        const padY = style ? Math.max(0, Math.round(parseFloat(style.paddingTop || '8') * dpr)) : Math.round(8 * dpr);
+        const fontPx = style ? Math.max(10, Math.round(parseFloat(style.fontSize || '16') * dpr)) : Math.round(16 * dpr);
+        const fontWeight = style ? (style.fontWeight || '800') : '800';
+        const fontFamily = style ? (style.fontFamily || "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif") : "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+        const borderRadiusPx = style ? Math.max(0, Math.round(parseFloat(style.borderRadius || '10') * dpr)) : Math.round(10 * dpr);
+        const borderColor = style ? (style.borderColor || 'rgba(255,255,255,0.25)') : 'rgba(255,255,255,0.25)';
+        const borderWidth = style ? Math.max(1, Math.round(parseFloat(style.borderWidth || '1') * dpr)) : Math.max(1, Math.round(1 * dpr));
+
+        // Police identique
         ctx.save();
-        ctx.font = `bold ${fontSizePx}px Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
+        ctx.font = `${/bold|[6-9]00/.test(fontWeight) ? 'bold ' : ''}${fontPx}px ${fontFamily}`;
         ctx.textBaseline = 'alphabetic';
         ctx.textAlign = 'right';
         const textW = ctx.measureText(text).width;
         const rectW = Math.ceil(textW + padX * 2);
-        const rectH = Math.ceil(fontSizePx + padY * 2);
-        const x2 = outW - margin;
-        const y2 = outH - margin;
-        // Position pivot coin bas/droite puis rotation
+        const rectH = Math.ceil(fontPx + padY * 2);
+
+        // Position basée sur la position réelle à l'écran (pivot = coin bas/droite)
+        const containerRect = document.getElementById('cameraContainer').getBoundingClientRect();
+        const overlayRect = hashtagOverlay ? hashtagOverlay.getBoundingClientRect() : null;
+        const x2 = overlayRect ? Math.round((overlayRect.right - containerRect.left) * dpr) : (outW - Math.round(rightPx * dpr));
+        const y2 = overlayRect ? Math.round((overlayRect.bottom - containerRect.top) * dpr) : (outH - Math.round(bottomPx * dpr));
+
+        // Rotation identique à l'overlay
+        const tiltRad = 6 * Math.PI / 180;
+        const portraitRad = portrait ? Math.PI / 2 : 0;
         ctx.translate(x2, y2);
         ctx.rotate(portraitRad + tiltRad);
-        // Bulle avec coins arrondis ancrée au pivot
-        const r = Math.floor(rectH * 0.35);
+
+        // Bulle arrondie
+        const r = borderRadiusPx;
         const x1 = -rectW, y1 = -rectH;
         ctx.beginPath();
         ctx.moveTo(x1 + r, y1);
@@ -325,15 +343,17 @@
         ctx.lineTo(x1, y1 + r);
         ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
         ctx.closePath();
-        // Gradient fond style lunettes 3D (rose -> cyan)
+
+        // Dégradé identique (135deg, rose -> cyan) dans l'espace local du canvas
         const grad = ctx.createLinearGradient(x1, y1, 0, 0);
-        grad.addColorStop(0, 'rgba(255,0,102,0.85)');
-        grad.addColorStop(1, 'rgba(0,217,255,0.85)');
+        grad.addColorStop(0, 'rgba(255,0,102,0.75)');
+        grad.addColorStop(1, 'rgba(0,217,255,0.75)');
         ctx.fillStyle = grad;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-        ctx.lineWidth = Math.max(1, Math.floor(rectH * 0.06));
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = borderWidth;
         ctx.stroke();
+
         // Texte
         ctx.fillStyle = '#ffffff';
         ctx.fillText(text, -padX, -padY);
