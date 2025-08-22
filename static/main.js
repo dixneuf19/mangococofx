@@ -10,6 +10,7 @@
   const glassesSrc = document.getElementById('glassesSrc');
   const captureButton = document.getElementById('captureButton');
   const hashtagOverlay = document.getElementById('hashtagOverlay');
+  const uiCanvas = document.getElementById('uiCanvas');
   // Pas d'UI overlay
 
   let mediaStream = null;
@@ -225,6 +226,7 @@
 
     // ---- FX: Sprites entre caméra et lunettes ----
     animateSprites(now, dtMs, containerW, containerH, spritesCtx);
+    try { drawUICanvas(); } catch {}
   }
 
   function startAnimation() {
@@ -234,6 +236,68 @@
       rafId = requestAnimationFrame(loop);
     };
     rafId = requestAnimationFrame(loop);
+  }
+
+  function drawUICanvas() {
+    if (!uiCanvas || !hashtagOverlay) return;
+    const ctx = uiCanvas.getContext('2d');
+    const W = uiCanvas.width;
+    const H = uiCanvas.height;
+    ctx.clearRect(0, 0, W, H);
+    try {
+      const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+      const style = getComputedStyle(hashtagOverlay);
+      const dpr = window.devicePixelRatio || 1;
+      const text = (hashtagOverlay.textContent || '').trim() || '#mangococo.brassband';
+      const rightPx = hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientWidth - (hashtagOverlay.offsetLeft + hashtagOverlay.offsetWidth)) : parseFloat(style.right || '28');
+      const bottomPx = hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientHeight - (hashtagOverlay.offsetTop + hashtagOverlay.offsetHeight)) : parseFloat(style.bottom || '28');
+      const padX = Math.max(0, Math.round(parseFloat(style.paddingLeft || '12') * dpr));
+      const padY = Math.max(0, Math.round(parseFloat(style.paddingTop || '8') * dpr));
+      const fontPx = Math.max(10, Math.round(parseFloat(style.fontSize || '16') * dpr));
+      const fontWeight = style.fontWeight || '800';
+      const fontFamily = style.fontFamily || 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+      const borderRadiusPx = Math.max(0, Math.round(parseFloat(style.borderRadius || '10') * dpr));
+      const borderColor = style.borderColor || 'rgba(255,255,255,0.25)';
+      const borderWidth = Math.max(1, Math.round(parseFloat(style.borderWidth || '1') * dpr));
+
+      ctx.save();
+      ctx.font = `${/bold|[6-9]00/.test(fontWeight) ? 'bold ' : ''}${fontPx}px ${fontFamily}`;
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'right';
+      const textW = ctx.measureText(text).width;
+      const rectW = Math.ceil(textW + padX * 2);
+      const rectH = Math.ceil(fontPx + padY * 2);
+      const x2 = W - Math.round(rightPx * dpr);
+      const y2 = H - Math.round(bottomPx * dpr);
+      const tiltRad = 6 * Math.PI / 180;
+      const portraitRad = portrait ? Math.PI / 2 : 0;
+      ctx.translate(x2, y2);
+      ctx.rotate(portraitRad + tiltRad);
+      const r = borderRadiusPx;
+      const x1 = -rectW, y1 = -rectH;
+      ctx.beginPath();
+      ctx.moveTo(x1 + r, y1);
+      ctx.lineTo(-r, y1);
+      ctx.quadraticCurveTo(0, y1, 0, y1 + r);
+      ctx.lineTo(0, -r);
+      ctx.quadraticCurveTo(0, 0, -r, 0);
+      ctx.lineTo(x1 + r, 0);
+      ctx.quadraticCurveTo(x1, 0, x1, -r);
+      ctx.lineTo(x1, y1 + r);
+      ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(x1, y1, 0, 0);
+      grad.addColorStop(0, 'rgba(255,0,102,0.75)');
+      grad.addColorStop(1, 'rgba(0,217,255,0.75)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = borderWidth;
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(text, -padX, -padY);
+      ctx.restore();
+    } catch {}
   }
 
   function onResize() {
@@ -248,7 +312,14 @@
     spritesCanvas.height = Math.floor(rect.height * dpr);
     spritesCanvas.style.width = rect.width + 'px';
     spritesCanvas.style.height = rect.height + 'px';
+    if (uiCanvas) {
+      uiCanvas.width = Math.floor(rect.width * dpr);
+      uiCanvas.height = Math.floor(rect.height * dpr);
+      uiCanvas.style.width = rect.width + 'px';
+      uiCanvas.style.height = rect.height + 'px';
+    }
     processGlassesAndRender();
+    try { drawUICanvas(); } catch {}
     updateHashtagOverlayTransform();
   }
 
@@ -290,6 +361,10 @@
       }
 
       // 4) Hashtag: dessiner en utilisant les mêmes styles que l'overlay DOM
+      // Si possible, copie directe du uiCanvas pour correspondance parfaite
+      if (uiCanvas && uiCanvas.width && uiCanvas.height) {
+        ctx.drawImage(uiCanvas, 0, 0, uiCanvas.width, uiCanvas.height, 0, 0, outW, outH);
+      } else {
       try {
         const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
         const style = hashtagOverlay ? getComputedStyle(hashtagOverlay) : null;
@@ -297,8 +372,9 @@
         const text = (hashtagOverlay && (hashtagOverlay.textContent || '').trim()) || '#mangococo.brassband';
 
         // Mesures dérivées des styles calculés pour correspondre au DOM
-        const rightPx = style ? parseFloat(style.right || '28') : 28;
-        const bottomPx = style ? parseFloat(style.bottom || '28') : 28;
+        // Extraire les valeurs finales en pixels même si CSS utilise clamp()
+        const rightPx = hashtagOverlay ? hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientWidth - (hashtagOverlay.offsetLeft + hashtagOverlay.offsetWidth)) : parseFloat(style.right || '28') : 28;
+        const bottomPx = hashtagOverlay ? hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientHeight - (hashtagOverlay.offsetTop + hashtagOverlay.offsetHeight)) : parseFloat(style.bottom || '28') : 28;
         const padX = style ? Math.max(0, Math.round(parseFloat(style.paddingLeft || '12') * dpr)) : Math.round(12 * dpr);
         const padY = style ? Math.max(0, Math.round(parseFloat(style.paddingTop || '8') * dpr)) : Math.round(8 * dpr);
         const fontPx = style ? Math.max(10, Math.round(parseFloat(style.fontSize || '16') * dpr)) : Math.round(16 * dpr);
@@ -317,11 +393,9 @@
         const rectW = Math.ceil(textW + padX * 2);
         const rectH = Math.ceil(fontPx + padY * 2);
 
-        // Position basée sur la position réelle à l'écran (pivot = coin bas/droite)
-        const containerRect = document.getElementById('cameraContainer').getBoundingClientRect();
-        const overlayRect = hashtagOverlay ? hashtagOverlay.getBoundingClientRect() : null;
-        const x2 = overlayRect ? Math.round((overlayRect.right - containerRect.left) * dpr) : (outW - Math.round(rightPx * dpr));
-        const y2 = overlayRect ? Math.round((overlayRect.bottom - containerRect.top) * dpr) : (outH - Math.round(bottomPx * dpr));
+        // Position basée exactement sur right/bottom CSS (comme l'overlay)
+        const x2 = outW - Math.round(rightPx * dpr);
+        const y2 = outH - Math.round(bottomPx * dpr);
 
         // Rotation identique à l'overlay
         const tiltRad = 6 * Math.PI / 180;
@@ -359,6 +433,7 @@
         ctx.fillText(text, -padX, -padY);
         ctx.restore();
       } catch (_) { }
+      }
 
       // Export en blob (meilleure qualité que dataURL) et proposer partage/téléchargement
       let blob = await new Promise(resolve => out.toBlob(resolve, 'image/jpeg', 0.95));

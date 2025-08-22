@@ -57,6 +57,8 @@
         <canvas id="spritesCanvas" aria-hidden="true"></canvas>
         <!-- Calque lunettes: rendu sur canvas pour pouvoir ajuster la transparence localement -->
         <canvas id="glassesCanvas" aria-hidden="true"></canvas>
+        <!-- Calque UI: bulles/hashtags dessinés pour correspondance parfaite avec la capture -->
+        <canvas id="uiCanvas" aria-hidden="true"></canvas>
         <!-- Image source (cachée) -->
         <img id="glassesSrc" src="/static/glasses-20x9.png" alt="Lunettes 3D" style="display:none" />
 
@@ -64,7 +66,8 @@
         <button id="captureButton" aria-label="Prendre une photo" hidden>📸</button>
 
         <!-- Hashtag overlay (affiché en live; aussi dessiné dans la capture) -->
-        <a id="hashtagOverlay" href="https://www.instagram.com/mangococo.brassband" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir Instagram mangococo.brassband">#mangococo.brassband</a>
+        <a id="hashtagOverlay" href="https://www.instagram.com/mango.coco.brassband" target="_blank"
+          rel="noopener noreferrer" aria-label="Ouvrir Instagram mango.coco.brassband">#mango.coco.brassband</a>
       </div>
 
       <div id="error" class="error" role="alert" hidden>
