@@ -52,12 +52,22 @@
     // Affiche le bouton capture dans ce mode
     captureButton.hidden = false;
     if (hashtagOverlay) hashtagOverlay.style.display = '';
+    updateHashtagOverlayTransform();
     // If a GIF overlay is active at the moment of entering the viewer, ensure class is applied (poll-client sets it too)
     try {
       const overlay = document.getElementById('gif-overlay');
       const active = overlay && overlay.style.display !== 'none';
       (document.documentElement || document.body).classList.toggle('gif-active', !!active);
     } catch {}
+  }
+
+  function updateHashtagOverlayTransform() {
+    if (!hashtagOverlay) return;
+    const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+    const tiltDeg = -6; // léger tilt
+    const totalDeg = (portrait ? 90 : 0) + tiltDeg;
+    hashtagOverlay.style.transformOrigin = '100% 100%';
+    hashtagOverlay.style.transform = `rotate(${totalDeg}deg)`;
   }
 
   async function startCamera() {
@@ -239,6 +249,7 @@
     spritesCanvas.style.width = rect.width + 'px';
     spritesCanvas.style.height = rect.height + 'px';
     processGlassesAndRender();
+    updateHashtagOverlayTransform();
   }
 
   // Capture d'une photo: composite vidéo + sprites + lunettes dans un canvas
@@ -278,45 +289,50 @@
         ctx.drawImage(glassesCanvas, 0, 0, glassesCanvas.width, glassesCanvas.height, 0, 0, outW, outH);
       }
 
-      // 4) Hashtag: dessiner le texte dans l'image exportée
+      // 4) Hashtag: dessiner le texte incliné, orienté comme les lunettes
       try {
+        const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
         const margin = Math.floor(outH * 0.02);
         const padY = Math.max(6, Math.floor(outH * 0.006));
         const padX = Math.max(8, Math.floor(outW * 0.01));
         const fontSizePx = Math.max(14, Math.floor(Math.min(outW, outH) * 0.028));
         const text = '#mangococo.brassband';
+        const tiltRad = -6 * Math.PI / 180;
+        const portraitRad = portrait ? Math.PI / 2 : 0;
         ctx.save();
         ctx.font = `bold ${fontSizePx}px Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
         ctx.textBaseline = 'alphabetic';
         ctx.textAlign = 'right';
         const textW = ctx.measureText(text).width;
-        const x2 = outW - margin;
-        const y2 = outH - margin;
         const rectW = Math.ceil(textW + padX * 2);
         const rectH = Math.ceil(fontSizePx + padY * 2);
-        // Background with rounded corners
-        const rx = Math.floor(rectH * 0.35);
+        const x2 = outW - margin;
+        const y2 = outH - margin;
+        // Position pivot coin bas/droite puis rotation
+        ctx.translate(x2, y2);
+        ctx.rotate(portraitRad + tiltRad);
+        // Bulle avec coins arrondis ancrée au pivot
+        const r = Math.floor(rectH * 0.35);
+        const x1 = -rectW, y1 = -rectH;
         ctx.beginPath();
-        const x1 = x2 - rectW, y1 = y2 - rectH;
-        const r = rx;
         ctx.moveTo(x1 + r, y1);
-        ctx.lineTo(x2 - r, y1);
-        ctx.quadraticCurveTo(x2, y1, x2, y1 + r);
-        ctx.lineTo(x2, y2 - r);
-        ctx.quadraticCurveTo(x2, y2, x2 - r, y2);
-        ctx.lineTo(x1 + r, y2);
-        ctx.quadraticCurveTo(x1, y2, x1, y2 - r);
+        ctx.lineTo(-r, y1);
+        ctx.quadraticCurveTo(0, y1, 0, y1 + r);
+        ctx.lineTo(0, -r);
+        ctx.quadraticCurveTo(0, 0, -r, 0);
+        ctx.lineTo(x1 + r, 0);
+        ctx.quadraticCurveTo(x1, 0, x1, -r);
         ctx.lineTo(x1, y1 + r);
         ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.2)';
         ctx.lineWidth = Math.max(1, Math.floor(rectH * 0.06));
         ctx.stroke();
-        // Text
+        // Texte
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(text, x2 - padX, y2 - padY);
+        ctx.fillText(text, -padX, -padY);
         ctx.restore();
       } catch (_) {}
 
@@ -337,7 +353,7 @@
 
       // Partage natif si disponible (mobile). Essaye d'abord avec fichiers, puis sans fichier (légende seulement)
       const shareTitle = 'Mango Coco FX';
-      const shareText = 'Photo 3D 🥭🥥🎺 — @mangococo.brassband';
+      const shareText = 'Photo 3D 🥭🥥🎺 — @mango.coco.brassband';
       if (navigator.share) {
         try {
           // Même si canShare renvoie false par prudence, de nombreux navigateurs acceptent share(files)
@@ -452,6 +468,7 @@
     onResize(); // met à l'échelle les canvases puis dessine
     startAnimation();
     ensureSpritesLoaded();
+    updateHashtagOverlayTransform();
   });
 
   window.addEventListener('resize', onResize);
@@ -462,6 +479,7 @@
         // Redémarrer l'animation pour recalculer le centre
         startAnimation();
         onResize();
+        updateHashtagOverlayTransform();
       });
     } catch (_) {
       // Safari iOS older versions do not support addEventListener on MediaQueryList
