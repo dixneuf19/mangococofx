@@ -64,7 +64,7 @@
   function updateHashtagOverlayTransform() {
     if (!hashtagOverlay) return;
     const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-    const tiltDeg = -6; // léger tilt
+    const tiltDeg = 6; // léger tilt inversé
     const totalDeg = (portrait ? 90 : 0) + tiltDeg;
     hashtagOverlay.style.transformOrigin = '100% 100%';
     hashtagOverlay.style.transform = `rotate(${totalDeg}deg)`;
@@ -297,7 +297,7 @@
         const padX = Math.max(8, Math.floor(outW * 0.01));
         const fontSizePx = Math.max(14, Math.floor(Math.min(outW, outH) * 0.028));
         const text = '#mangococo.brassband';
-        const tiltRad = -6 * Math.PI / 180;
+        const tiltRad = 6 * Math.PI / 180;
         const portraitRad = portrait ? Math.PI / 2 : 0;
         ctx.save();
         ctx.font = `bold ${fontSizePx}px Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;

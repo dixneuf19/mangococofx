@@ -193,7 +193,7 @@ body {
 /* Hashtag overlay in viewer */
 #hashtagOverlay {
   position: absolute;
-  right: clamp(50px, 5vw, 72px);
+  right: clamp(75px, 5vw, 72px);
   bottom: clamp(28px, 5vw, 72px);
   padding: 8px 12px;
   border-radius: 10px;
@@ -207,7 +207,7 @@ body {
   backdrop-filter: blur(6px);
   pointer-events: none;
   transform-origin: 100% 100%;
-  transform: rotate(-6deg);
+  transform: rotate(6deg);
 }
 
 /* Bouton capture */
