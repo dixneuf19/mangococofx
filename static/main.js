@@ -353,7 +353,7 @@
 
       // Partage natif si disponible (mobile). Essaye d'abord avec fichiers, puis sans fichier (légende seulement)
       const shareTitle = 'Mango Coco FX';
-      const shareText = 'Photo 3D 🥭🥥🎺 — @mango.coco.brassband';
+      const shareText = 'Photo 3D 🥭🥥🎺 — @mangococo.brassband';
       if (navigator.share) {
         try {
           // Même si canShare renvoie false par prudence, de nombreux navigateurs acceptent share(files)
