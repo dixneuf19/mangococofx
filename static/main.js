@@ -9,6 +9,7 @@
   const spritesCanvas = document.getElementById('spritesCanvas');
   const glassesSrc = document.getElementById('glassesSrc');
   const captureButton = document.getElementById('captureButton');
+  const hashtagOverlay = document.getElementById('hashtagOverlay');
   // Pas d'UI overlay
 
   let mediaStream = null;
@@ -42,6 +43,7 @@
     viewer.classList.remove('active');
     intro.classList.add('active');
     stopCamera();
+    if (hashtagOverlay) hashtagOverlay.style.display = 'none';
   }
 
   function showViewer() {
@@ -49,6 +51,7 @@
     viewer.classList.add('active');
     // Affiche le bouton capture dans ce mode
     captureButton.hidden = false;
+    if (hashtagOverlay) hashtagOverlay.style.display = '';
     // If a GIF overlay is active at the moment of entering the viewer, ensure class is applied (poll-client sets it too)
     try {
       const overlay = document.getElementById('gif-overlay');
@@ -274,6 +277,48 @@
       if (glassesCanvas.width && glassesCanvas.height) {
         ctx.drawImage(glassesCanvas, 0, 0, glassesCanvas.width, glassesCanvas.height, 0, 0, outW, outH);
       }
+
+      // 4) Hashtag: dessiner le texte dans l'image exportée
+      try {
+        const margin = Math.floor(outH * 0.02);
+        const padY = Math.max(6, Math.floor(outH * 0.006));
+        const padX = Math.max(8, Math.floor(outW * 0.01));
+        const fontSizePx = Math.max(14, Math.floor(Math.min(outW, outH) * 0.028));
+        const text = '#mangococo.brassband';
+        ctx.save();
+        ctx.font = `bold ${fontSizePx}px Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'right';
+        const textW = ctx.measureText(text).width;
+        const x2 = outW - margin;
+        const y2 = outH - margin;
+        const rectW = Math.ceil(textW + padX * 2);
+        const rectH = Math.ceil(fontSizePx + padY * 2);
+        // Background with rounded corners
+        const rx = Math.floor(rectH * 0.35);
+        ctx.beginPath();
+        const x1 = x2 - rectW, y1 = y2 - rectH;
+        const r = rx;
+        ctx.moveTo(x1 + r, y1);
+        ctx.lineTo(x2 - r, y1);
+        ctx.quadraticCurveTo(x2, y1, x2, y1 + r);
+        ctx.lineTo(x2, y2 - r);
+        ctx.quadraticCurveTo(x2, y2, x2 - r, y2);
+        ctx.lineTo(x1 + r, y2);
+        ctx.quadraticCurveTo(x1, y2, x1, y2 - r);
+        ctx.lineTo(x1, y1 + r);
+        ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = Math.max(1, Math.floor(rectH * 0.06));
+        ctx.stroke();
+        // Text
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(text, x2 - padX, y2 - padY);
+        ctx.restore();
+      } catch (_) {}
 
       // Export en blob (meilleure qualité que dataURL) et proposer partage/téléchargement
       let blob = await new Promise(resolve => out.toBlob(resolve, 'image/jpeg', 0.95));

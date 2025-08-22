@@ -65,6 +65,19 @@ body {
 .cta:active { transform: translateY(2px); box-shadow: 0 4px 0 #07b893; }
 .disclaimer { opacity: 0.6; font-size: 12px; margin: 0; }
 
+/* Social links on intro */
+.social-links { display: flex; gap: 12px; justify-content: center; margin-top: 4px; }
+.social {
+  color: #0b0e17;
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 12px 24px rgba(0,0,0,0.3);
+}
+.social:hover { background: #00ffcc; }
+
 .placeholders { position: absolute; inset: 0; pointer-events: none; }
 .placeholders .ph {
   position: absolute;
@@ -94,6 +107,22 @@ body {
   pointer-events: none;
   transform-origin: 50% 50%;
   background: transparent;
+}
+/* Hashtag overlay in viewer */
+#hashtagOverlay {
+  position: absolute;
+  right: 12px; bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  font-size: clamp(12px, 2.8vw, 18px);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
 }
 /* Bouton capture */
 #captureButton {
