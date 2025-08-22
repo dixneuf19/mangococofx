@@ -226,7 +226,7 @@
 
     // ---- FX: Sprites entre caméra et lunettes ----
     animateSprites(now, dtMs, containerW, containerH, spritesCtx);
-    try { drawUICanvas(); } catch {}
+    try { drawUICanvas(); } catch { }
   }
 
   function startAnimation() {
@@ -253,7 +253,7 @@
       const bottomPx = hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientHeight - (hashtagOverlay.offsetTop + hashtagOverlay.offsetHeight)) : parseFloat(style.bottom || '28');
       const padX = Math.max(0, Math.round(parseFloat(style.paddingLeft || '12') * dpr));
       const padY = Math.max(0, Math.round(parseFloat(style.paddingTop || '8') * dpr));
-      const fontPx = Math.max(10, Math.round(parseFloat(style.fontSize || '16') * dpr));
+      const fontPx = Math.max(16, Math.round(parseFloat(style.fontSize || '22') * dpr));
       const fontWeight = style.fontWeight || '800';
       const fontFamily = style.fontFamily || 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
       const borderRadiusPx = Math.max(0, Math.round(parseFloat(style.borderRadius || '10') * dpr));
@@ -263,13 +263,13 @@
       ctx.save();
       ctx.font = `${/bold|[6-9]00/.test(fontWeight) ? 'bold ' : ''}${fontPx}px ${fontFamily}`;
       ctx.textBaseline = 'alphabetic';
-      ctx.textAlign = 'right';
+      ctx.textAlign = 'center';
       const textW = ctx.measureText(text).width;
       const rectW = Math.ceil(textW + padX * 2);
       const rectH = Math.ceil(fontPx + padY * 2);
       const x2 = W - Math.round(rightPx * dpr);
       const y2 = H - Math.round(bottomPx * dpr);
-      const tiltRad = 6 * Math.PI / 180;
+      const tiltRad = 12 * Math.PI / 180;
       const portraitRad = portrait ? Math.PI / 2 : 0;
       ctx.translate(x2, y2);
       ctx.rotate(portraitRad + tiltRad);
@@ -287,17 +287,22 @@
       ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
       ctx.closePath();
       const grad = ctx.createLinearGradient(x1, y1, 0, 0);
-      grad.addColorStop(0, 'rgba(255,0,102,0.75)');
-      grad.addColorStop(1, 'rgba(0,217,255,0.75)');
+      grad.addColorStop(0, 'rgba(255, 0, 102, 0.80)');
+      grad.addColorStop(1, 'rgba(255, 64, 64, 0.80)');
       ctx.fillStyle = grad;
       ctx.fill();
       ctx.strokeStyle = borderColor;
       ctx.lineWidth = borderWidth;
       ctx.stroke();
+      // Add subtle stroke to improve readability
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(text, -padX, -padY);
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      ctx.lineWidth = Math.max(2, Math.round(fontPx * 0.08));
+      const centerX = -rectW / 2;
+      ctx.strokeText(text, centerX, -padY);
+      ctx.fillText(text, centerX, -padY);
       ctx.restore();
-    } catch {}
+    } catch { }
   }
 
   function onResize() {
@@ -319,7 +324,7 @@
       uiCanvas.style.height = rect.height + 'px';
     }
     processGlassesAndRender();
-    try { drawUICanvas(); } catch {}
+    try { drawUICanvas(); } catch { }
     updateHashtagOverlayTransform();
   }
 
@@ -365,74 +370,78 @@
       if (uiCanvas && uiCanvas.width && uiCanvas.height) {
         ctx.drawImage(uiCanvas, 0, 0, uiCanvas.width, uiCanvas.height, 0, 0, outW, outH);
       } else {
-      try {
-        const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-        const style = hashtagOverlay ? getComputedStyle(hashtagOverlay) : null;
-        const dpr = window.devicePixelRatio || 1;
-        const text = (hashtagOverlay && (hashtagOverlay.textContent || '').trim()) || '#mangococo.brassband';
+        try {
+          const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
+          const style = hashtagOverlay ? getComputedStyle(hashtagOverlay) : null;
+          const dpr = window.devicePixelRatio || 1;
+          const text = (hashtagOverlay && (hashtagOverlay.textContent || '').trim()) || '#mangococo.brassband';
 
-        // Mesures dérivées des styles calculés pour correspondre au DOM
-        // Extraire les valeurs finales en pixels même si CSS utilise clamp()
-        const rightPx = hashtagOverlay ? hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientWidth - (hashtagOverlay.offsetLeft + hashtagOverlay.offsetWidth)) : parseFloat(style.right || '28') : 28;
-        const bottomPx = hashtagOverlay ? hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientHeight - (hashtagOverlay.offsetTop + hashtagOverlay.offsetHeight)) : parseFloat(style.bottom || '28') : 28;
+          // Mesures dérivées des styles calculés pour correspondre au DOM
+          // Extraire les valeurs finales en pixels même si CSS utilise clamp()
+          const rightPx = hashtagOverlay ? hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientWidth - (hashtagOverlay.offsetLeft + hashtagOverlay.offsetWidth)) : parseFloat(style.right || '28') : 28;
+          const bottomPx = hashtagOverlay ? hashtagOverlay.offsetParent ? (hashtagOverlay.offsetParent.clientHeight - (hashtagOverlay.offsetTop + hashtagOverlay.offsetHeight)) : parseFloat(style.bottom || '28') : 28;
         const padX = style ? Math.max(0, Math.round(parseFloat(style.paddingLeft || '12') * dpr)) : Math.round(12 * dpr);
         const padY = style ? Math.max(0, Math.round(parseFloat(style.paddingTop || '8') * dpr)) : Math.round(8 * dpr);
-        const fontPx = style ? Math.max(10, Math.round(parseFloat(style.fontSize || '16') * dpr)) : Math.round(16 * dpr);
+        const fontPx = style ? Math.max(16, Math.round(parseFloat(style.fontSize || '22') * dpr)) : Math.round(22 * dpr);
         const fontWeight = style ? (style.fontWeight || '800') : '800';
-        const fontFamily = style ? (style.fontFamily || "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif") : "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
-        const borderRadiusPx = style ? Math.max(0, Math.round(parseFloat(style.borderRadius || '10') * dpr)) : Math.round(10 * dpr);
-        const borderColor = style ? (style.borderColor || 'rgba(255,255,255,0.25)') : 'rgba(255,255,255,0.25)';
-        const borderWidth = style ? Math.max(1, Math.round(parseFloat(style.borderWidth || '1') * dpr)) : Math.max(1, Math.round(1 * dpr));
+        const fontFamily = style ? (style.fontFamily || 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif') : 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+          const borderRadiusPx = style ? Math.max(0, Math.round(parseFloat(style.borderRadius || '10') * dpr)) : Math.round(10 * dpr);
+          const borderColor = style ? (style.borderColor || 'rgba(255,255,255,0.25)') : 'rgba(255,255,255,0.25)';
+          const borderWidth = style ? Math.max(1, Math.round(parseFloat(style.borderWidth || '1') * dpr)) : Math.max(1, Math.round(1 * dpr));
 
-        // Police identique
-        ctx.save();
-        ctx.font = `${/bold|[6-9]00/.test(fontWeight) ? 'bold ' : ''}${fontPx}px ${fontFamily}`;
+          // Police identique
+          ctx.save();
+          ctx.font = `${/bold|[6-9]00/.test(fontWeight) ? 'bold ' : ''}${fontPx}px ${fontFamily}`;
         ctx.textBaseline = 'alphabetic';
-        ctx.textAlign = 'right';
-        const textW = ctx.measureText(text).width;
-        const rectW = Math.ceil(textW + padX * 2);
-        const rectH = Math.ceil(fontPx + padY * 2);
+        ctx.textAlign = 'center';
+          const textW = ctx.measureText(text).width;
+          const rectW = Math.ceil(textW + padX * 2);
+          const rectH = Math.ceil(fontPx + padY * 2);
 
-        // Position basée exactement sur right/bottom CSS (comme l'overlay)
-        const x2 = outW - Math.round(rightPx * dpr);
-        const y2 = outH - Math.round(bottomPx * dpr);
+          // Position basée exactement sur right/bottom CSS (comme l'overlay)
+          const x2 = outW - Math.round(rightPx * dpr);
+          const y2 = outH - Math.round(bottomPx * dpr);
 
-        // Rotation identique à l'overlay
-        const tiltRad = 6 * Math.PI / 180;
-        const portraitRad = portrait ? Math.PI / 2 : 0;
-        ctx.translate(x2, y2);
-        ctx.rotate(portraitRad + tiltRad);
+          // Rotation identique à l'overlay
+        const tiltRad = 12 * Math.PI / 180;
+          const portraitRad = portrait ? Math.PI / 2 : 0;
+          ctx.translate(x2, y2);
+          ctx.rotate(portraitRad + tiltRad);
 
-        // Bulle arrondie
-        const r = borderRadiusPx;
-        const x1 = -rectW, y1 = -rectH;
-        ctx.beginPath();
-        ctx.moveTo(x1 + r, y1);
-        ctx.lineTo(-r, y1);
-        ctx.quadraticCurveTo(0, y1, 0, y1 + r);
-        ctx.lineTo(0, -r);
-        ctx.quadraticCurveTo(0, 0, -r, 0);
-        ctx.lineTo(x1 + r, 0);
-        ctx.quadraticCurveTo(x1, 0, x1, -r);
-        ctx.lineTo(x1, y1 + r);
-        ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
-        ctx.closePath();
+          // Bulle arrondie
+          const r = borderRadiusPx;
+          const x1 = -rectW, y1 = -rectH;
+          ctx.beginPath();
+          ctx.moveTo(x1 + r, y1);
+          ctx.lineTo(-r, y1);
+          ctx.quadraticCurveTo(0, y1, 0, y1 + r);
+          ctx.lineTo(0, -r);
+          ctx.quadraticCurveTo(0, 0, -r, 0);
+          ctx.lineTo(x1 + r, 0);
+          ctx.quadraticCurveTo(x1, 0, x1, -r);
+          ctx.lineTo(x1, y1 + r);
+          ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
+          ctx.closePath();
 
-        // Dégradé identique (135deg, rose -> cyan) dans l'espace local du canvas
+          // Dégradé identique (135deg, rose -> cyan) dans l'espace local du canvas
         const grad = ctx.createLinearGradient(x1, y1, 0, 0);
-        grad.addColorStop(0, 'rgba(255,0,102,0.75)');
-        grad.addColorStop(1, 'rgba(0,217,255,0.75)');
-        ctx.fillStyle = grad;
-        ctx.fill();
-        ctx.strokeStyle = borderColor;
-        ctx.lineWidth = borderWidth;
-        ctx.stroke();
+        grad.addColorStop(0, 'rgba(255, 0, 102, 0.80)');
+        grad.addColorStop(1, 'rgba(255, 64, 64, 0.80)');
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.strokeStyle = borderColor;
+          ctx.lineWidth = borderWidth;
+          ctx.stroke();
 
-        // Texte
+        // Texte + léger contour pour lisibilité
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(text, -padX, -padY);
-        ctx.restore();
-      } catch (_) { }
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        ctx.lineWidth = Math.max(2, Math.round(fontPx * 0.08));
+        const centerX2 = -rectW / 2;
+        ctx.strokeText(text, centerX2, -padY);
+        ctx.fillText(text, centerX2, -padY);
+          ctx.restore();
+        } catch (_) { }
       }
 
       // Export en blob (meilleure qualité que dataURL) et proposer partage/téléchargement
