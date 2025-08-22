@@ -58,7 +58,7 @@
       const overlay = document.getElementById('gif-overlay');
       const active = overlay && overlay.style.display !== 'none';
       (document.documentElement || document.body).classList.toggle('gif-active', !!active);
-    } catch {}
+    } catch { }
   }
 
   function updateHashtagOverlayTransform() {
@@ -292,7 +292,7 @@
       // 4) Hashtag: dessiner le texte incliné, orienté comme les lunettes
       try {
         const portrait = window.matchMedia && window.matchMedia('(orientation: portrait)').matches;
-        const margin = Math.floor(outH * 0.03); // un peu plus de marge pour éviter le crop
+        const margin = Math.floor(Math.min(outW, outH) * 0.1); // marge plus grande pour éviter le crop
         const padY = Math.max(6, Math.floor(outH * 0.006));
         const padX = Math.max(8, Math.floor(outW * 0.01));
         const fontSizePx = Math.max(14, Math.floor(Math.min(outW, outH) * 0.028));
@@ -338,7 +338,7 @@
         ctx.fillStyle = '#ffffff';
         ctx.fillText(text, -padX, -padY);
         ctx.restore();
-      } catch (_) {}
+      } catch (_) { }
 
       // Export en blob (meilleure qualité que dataURL) et proposer partage/téléchargement
       let blob = await new Promise(resolve => out.toBlob(resolve, 'image/jpeg', 0.95));
