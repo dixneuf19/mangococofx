@@ -574,7 +574,7 @@
 
     // Update displayed gif
     if (currentGif) {
-      currentGif.src = `/static/gif/${gifName}`;
+      currentGif.src = `gif/${gifName}`;
     }
   }
 

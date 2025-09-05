@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;700&family=Lilita+One&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
@@ -62,24 +62,24 @@
         </div>
         <div class="gif-selector">
           <button class="gif-option active" data-gif="chicken-run.gif">
-            <img src="/static/gif/chicken-run.gif" alt="Chicken Run" />
+            <img src="gif/chicken-run.gif" alt="Chicken Run" />
             <span>Chicken Run</span>
           </button>
           <button class="gif-option" data-gif="matrix-bullet-dodge.gif">
-            <img src="/static/gif/matrix-bullet-dodge.gif" alt="Matrix" />
+            <img src="gif/matrix-bullet-dodge.gif" alt="Matrix" />
             <span>Matrix</span>
           </button>
           <button class="gif-option" data-gif="superman-flying.gif">
-            <img src="/static/gif/superman-flying.gif" alt="Superman" />
+            <img src="gif/superman-flying.gif" alt="Superman" />
             <span>Superman</span>
           </button>
           <button class="gif-option" data-gif="mgcc.gif">
-            <img src="/static/gif/mgcc.gif" alt="Mango Coco" />
+            <img src="gif/mgcc.gif" alt="Mango Coco" />
             <span>Mango Coco</span>
           </button>
         </div>
         <div class="gif-display">
-          <img id="currentGif" src="/static/gif/chicken-run.gif" alt="Current GIF" />
+          <img id="currentGif" src="gif/chicken-run.gif" alt="Current GIF" />
         </div>
       </div>
     </section>
@@ -95,7 +95,7 @@
         <!-- Calque UI: bulles/hashtags dessinés pour correspondance parfaite avec la capture -->
         <canvas id="uiCanvas" aria-hidden="true"></canvas>
         <!-- Image source (cachée) -->
-        <img id="glassesSrc" src="/static/glasses-20x9.png" alt="Lunettes 3D" style="display:none" />
+        <img id="glassesSrc" src="glasses-20x9.png" alt="Lunettes 3D" style="display:none" />
 
         <!-- Bouton capture -->
         <button id="captureButton" aria-label="Prendre une photo" hidden>📸</button>
@@ -111,7 +111,7 @@
     </section>
   </div>
 
-  <script src="/static/main.js" defer></script>
+  <script src="main.js" defer></script>
 </body>
 
 </html>
